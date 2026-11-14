@@ -1,34 +1,192 @@
-// PLACEHOLDER: the compare page is owned by the next agent.
-// URL: /compare?before=<passId>&after=<passId> (build it with paths.compare). Both passes must share a stackId.
+// Compare page: /compare?before=<passId>&after=<passId> (build it with paths.compare).
+// Any two passes; when their viewing geometry differs, the page says plainly that brightness changes are not ground changes.
+import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
+import { ApiError, describeError } from "../../api/client";
+import { usePass } from "../../api/hooks";
+import type { Pass } from "../../api/types";
 import { paths } from "../../app/paths";
 import { BaseMap } from "../../map/BaseMap";
-import { MapPageLayout, PageTitle } from "../../ui/MapPageLayout";
+import { BeforeAfterMap } from "../../map/BeforeAfterMap";
+import { describeGeometry } from "../../map/beforeAfter";
+import { ErrorMessage, ProgressBar, StaleNotice } from "../../ui/feedback";
+import { formatBytes, formatDateLong, plural } from "../../ui/format";
+import { MapPageLayout, PageTitle, SectionTitle } from "../../ui/MapPageLayout";
+import { compareArea, compareNotes, daysBetween, formatTimeUtc, orderPasses, readCompareParams } from "./compareLogic";
 
 export function ComparePage() {
   const [params] = useSearchParams();
-  const before = params.get("before");
-  const after = params.get("after");
+  const ids = readCompareParams(params);
+  const first = usePass(ids.before ?? undefined);
+  const second = usePass(ids.after ?? undefined);
 
-  const panel = (
-    <div className="flex flex-col gap-4">
-      <PageTitle>Before and after</PageTitle>
-      {before && after ? (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px] text-ink-2">
-          <dt>Before</dt>
-          <dd className="break-all text-ink">{before}</dd>
-          <dt>After</dt>
-          <dd className="break-all text-ink">{after}</dd>
-        </dl>
-      ) : (
-        <p className="text-ink-2">Pick two passes of the same place to compare them.</p>
-      )}
-      <p className="text-[14px] text-ink-3">The before and after comparison is being built.</p>
-      <Link to={paths.overview()} className="link self-start">
-        Back to the map
-      </Link>
-    </div>
+  const shell = (panel: ReactNode, map: ReactNode = <BaseMap />) => (
+    <MapPageLayout panelLabel="Comparison" panel={<div className="flex flex-col gap-6">{panel}</div>} map={map} />
+  );
+  const back = (
+    <Link to={paths.overview()} className="link self-start text-[14px]">
+      Back to the map
+    </Link>
   );
 
-  return <MapPageLayout panelLabel="Comparison" panel={panel} map={<BaseMap />} />;
+  if (!ids.before || !ids.after) {
+    const missing = !ids.before && !ids.after ? "both passes" : !ids.before ? "the before pass" : "the after pass";
+    return shell(
+      <>
+        <PageTitle>Before and after</PageTitle>
+        <p className="text-[15px] leading-[1.55] text-ink-2">
+          This address is missing {missing}. Pick two passes of the same place to compare them: open a state on the map to see
+          its passes.
+        </p>
+        {back}
+      </>,
+    );
+  }
+
+  const failures = [
+    { label: "before", id: ids.before, query: first },
+    { label: "after", id: ids.after, query: second },
+  ].filter((f) => f.query.isError);
+  if (failures.length > 0) {
+    return shell(
+      <>
+        <PageTitle>Before and after</PageTitle>
+        {failures.map((f) => {
+          const notFound = f.query.error instanceof ApiError && f.query.error.status === 404;
+          return (
+            <div key={f.label} className="flex flex-col gap-1.5">
+              <ErrorMessage onRetry={notFound ? undefined : () => f.query.refetch()}>
+                The {f.label} pass could not be loaded. {describeError(f.query.error)}
+              </ErrorMessage>
+              <p className="num break-all text-[12px] text-ink-3">{f.id}</p>
+            </div>
+          );
+        })}
+        <p className="text-[14px] text-ink-2">Check the address, or pick two passes of the same place from a state on the map.</p>
+        {back}
+      </>,
+    );
+  }
+
+  if (!first.data || !second.data) {
+    return shell(
+      <>
+        <PageTitle>Before and after</PageTitle>
+        <div className="flex flex-col gap-2">
+          <ProgressBar label="Loading the two passes" />
+          <p className="text-[14px] text-ink-2">Loading the two passes from NASA's catalog…</p>
+        </div>
+      </>,
+    );
+  }
+
+  const { before, after, swapped } = orderPasses(first.data.pass, second.data.pass);
+  const notes = compareNotes(before, after);
+  const days = daysBetween(before.date, after.date);
+  const stale = first.data.dataSource === "stale" || second.data.dataSource === "stale" ? "stale" : "live";
+
+  return shell(
+    <>
+      <header className="flex flex-col gap-3">
+        <PageTitle>Before and after</PageTitle>
+        <p className="text-[15px] leading-[1.55] text-ink-2">
+          {notes.samePass
+            ? `One radar pass from ${formatDateLong(before.date)}.`
+            : `Two radar images ${plural(days, "day", "days")} apart, from ${formatDateLong(before.date)} and ${formatDateLong(after.date)}.${notes.sameGeometry ? " Flip between them on the map to see what changed." : " Flip between them on the map, but read the note below first."}`}
+        </p>
+      </header>
+      <StaleNotice dataSource={stale} />
+
+      {!notes.sameGeometry ? (
+        <Caution>
+          <strong className="font-[650]">These passes were taken from different viewing geometries.</strong> The radar
+          looked at the ground from a different track, direction or frame ({describeGeometry(before)}, then{" "}
+          {describeGeometry(after)}), so brightness differences between them do not mean the ground changed.
+        </Caution>
+      ) : null}
+      {notes.samePass ? <Caution>Both ids in the address are the same pass, so the two images are identical.</Caution> : null}
+      {swapped ? (
+        <p className="text-[13px] leading-snug text-ink-3">
+          The address listed the later pass as "before". They are shown in date order.
+        </p>
+      ) : null}
+
+      <section className="flex flex-col gap-2" aria-labelledby="details-title">
+        <SectionTitle id="details-title">The two passes</SectionTitle>
+        <PassTable before={before} after={after} />
+        {notes.sameGeometry ? (
+          <p className="text-[13px] leading-snug text-ink-3">
+            Same track, direction and frame, so the radar saw the ground from the same angle both times.
+          </p>
+        ) : null}
+      </section>
+
+      <section className="flex flex-col gap-2" aria-labelledby="read-title">
+        <SectionTitle id="read-title">Reading the images</SectionTitle>
+        <ul className="flex list-disc flex-col gap-1.5 pl-4 text-[14px] leading-[1.55] text-ink-2 marker:text-ink-3">
+          <li>Still water reflects the radar pulse away from the satellite, so it looks dark.</li>
+          <li>These are preview images: visual renderings, not calibrated measurements.</li>
+        </ul>
+      </section>
+
+      {back}
+    </>,
+    <BeforeAfterMap
+      before={{ passId: before.id, date: before.date }}
+      after={{ passId: after.id, date: after.date }}
+      initialBbox={compareArea(before, after)}
+      pairBbox={compareArea(before, after)}
+    />,
+  );
+}
+
+function Caution({ children }: { children: ReactNode }) {
+  return (
+    <div role="note" className="flex gap-2 rounded-[3px] bg-caution-wash px-3 py-2.5 text-[14px] leading-snug text-caution">
+      <svg aria-hidden viewBox="0 0 20 20" className="mt-0.5 size-4 shrink-0" fill="currentColor">
+        <path d="M10 2.5 18.5 17h-17L10 2.5Zm0 4.2-.9 6.1h1.8L10 6.7Zm0 7.6a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 0 0 0-2.1Z" />
+      </svg>
+      <p>{children}</p>
+    </div>
+  );
+}
+
+function PassTable({ before, after }: { before: Pass; after: Pass }) {
+  const rows: [string, (p: Pass) => ReactNode][] = [
+    ["Date", (p) => formatDateLong(p.date)],
+    ["Time", (p) => formatTimeUtc(p.start)],
+    ["Direction", (p) => (p.direction === "ascending" ? "Ascending (heading north)" : "Descending (heading south)")],
+    ["Track", (p) => p.track],
+    ["Frame", (p) => p.frame],
+    ["Data version", (p) => `${p.maturity[0].toUpperCase()}${p.maturity.slice(1)}, ${p.productVersion}`],
+    ["Full data file", (p) => formatBytes(p.sizeBytes)],
+  ];
+  return (
+    <table className="num w-full border-collapse text-left text-[13px]">
+      <thead>
+        <tr className="border-b border-rule text-ink-2">
+          <th scope="col" className="py-1.5 pr-2 font-[500]">
+            <span className="sr-only">Detail</span>
+          </th>
+          <th scope="col" className="py-1.5 pr-2 font-[650] text-ink">
+            Before
+          </th>
+          <th scope="col" className="py-1.5 font-[650] text-ink">
+            After
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([label, get]) => (
+          <tr key={label} className="border-b border-rule align-top">
+            <th scope="row" className="py-1.5 pr-2 font-[500] text-ink-2">
+              {label}
+            </th>
+            <td className="py-1.5 pr-2 text-ink">{get(before)}</td>
+            <td className="py-1.5 text-ink">{get(after)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }

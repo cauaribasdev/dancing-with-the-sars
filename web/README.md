@@ -55,9 +55,9 @@ para refazer o pré-empacotamento. Confirmado em dev e em `vite preview` (o work
 | Caminho | Página | Dono |
 |---|---|---|
 | `/?month=YYYY-MM&region=<id>` | Visão geral: mapa do Brasil por dias com passagem | `features/overview/` (pronta) |
-| `/region/:regionId?start=YYYY-MM-DD&end=YYYY-MM-DD` | Região: passagens, linha do tempo, contornos | `features/region/` (placeholder) |
-| `/story/:storyId` | História (hoje: `rs-flood-jul-2026`, vem de `/api/stories`) | `features/story/` (placeholder com a conferência de alinhamento) |
-| `/compare?before=<passId>&after=<passId>` | Antes e depois de duas passagens com o mesmo `stackId` | `features/compare/` (placeholder) |
+| `/region/:regionId?start=YYYY-MM-DD&end=YYYY-MM-DD[&day=YYYY-MM-DD][&pass=<id>]` | Região: passagens, linha do tempo, contornos | `features/region/` (pronta) |
+| `/story/:storyId` | História (hoje: `rs-flood-jul-2026`, vem de `/api/stories`) | `features/story/` (pronta) |
+| `/compare?before=<passId>&after=<passId>` | Antes e depois de duas passagens quaisquer (avisa se o `stackId` difere) | `features/compare/` (pronta) |
 
 Monte links sempre com `paths` de `src/app/paths.ts` (`paths.region(id, period)`, `paths.compare(a, b)`, ...).
 Não escreva ids de história no código: pegue de `useStories()`.
@@ -93,18 +93,20 @@ web/
       BrowseImageLayer.tsx  useBrowseImage + <BrowseImageLayer> (imagem posicionada por georef.corners)
       BrowseImageStatus.tsx carregando com %, "não mostrada" e por quê, erro
       browseImage.ts      regra de qualidade + download com progresso e cache (8 imagens)
+      BeforeAfterMap.tsx  visualizador antes/depois (ver "Antes e depois" abaixo); regras puras em beforeAfter.ts
       mapColors.ts        cores e larguras para camadas MapLibre
     ui/
       MapPageLayout.tsx   painel 380 px + mapa; PageTitle, SectionTitle
       feedback.tsx        ProgressBar, StaleNotice, ErrorMessage
+      MonthPicker.tsx     mês anterior / lista / próximo (visão geral e região)
       format.ts           datas/números em inglês (UTC), plural, tamanho de arquivo
       Wordmark.tsx
     features/
-      overview/           visão geral (CoverageMap, MonthPicker, RegionPicker, RegionSummary,
+      overview/           visão geral (CoverageMap, RegionPicker, RegionSummary,
                           CoverageLegend, StoryCard, StoryMarker, coverageScale)
-      region/             RegionPage.tsx (placeholder)
-      story/              StoryPage.tsx (placeholder + conferência de alinhamento)
-      compare/            ComparePage.tsx (placeholder)
+      region/             página da região (ver "Página da região" abaixo)
+      story/              StoryPage.tsx + storyLogic.ts (pares, textos de data, enquadramento)
+      compare/            ComparePage.tsx + compareLogic.ts (ordem, avisos, detalhes)
 ```
 
 Cada agente/pessoa é dono de uma pasta em `features/`. Componente usado por mais de uma página vai para `ui/`
@@ -148,6 +150,35 @@ Regras que valem para todas as páginas:
 - **Limites de período**: país 31 dias, macrorregião 92, estado 366. Erro `window_too_large` vira texto por `describeError`.
 - **`dataSource: "stale"`**: mostre `<StaleNotice>` perto dos números.
 - **Nomes**: `regionName(region)` em vez de `region.name` (país e macrorregiões em inglês).
+
+## Página da região
+
+`features/region/`. Sem `start`/`end`, pede à API o padrão (últimos 30 dias); o seletor de mês mantém cada pedido
+dentro dos limites. O dia e a passagem escolhidos ficam na URL (`day`, `pass`) para a demo abrir direto neles.
+
+- **Linha do tempo** (`DayCalendar`): calendário com o número de passagens de cada dia (campo `timeline`).
+  Escolher um dia filtra o mapa e a lista. A lista inteira só aparece até 150 passagens (estado); no país ou numa
+  macrorregião ela espera um dia, para a página continuar leve.
+- **Mapa** (`RegionMap`): contornos de `useRegionFootprints` (amarelo sobre tinta), contorno da região, imagem da
+  passagem escolhida logo abaixo do contorno grosso dela. Mudar dia ou passagem só troca filtros das camadas, sem
+  reenviar o GeoJSON. Um clique onde vários contornos se sobrepõem abre uma lista para escolher.
+- **Comparar** (`useStackNeighbors`): anterior e seguinte do mesmo `stackId`. Se faltar um lado dentro do período,
+  busca os 24 dias logo antes ou depois (um pedido por lado, compartilhado por todas as passagens; 24 dias cabem até no
+  limite do país).
+- Lógica pura em `regionLogic.ts` (período da URL, calendário, agrupamento por dia, vizinhos, janelas de margem), com testes.
+
+## Antes e depois, história e comparação
+
+- **Visualizador** (`map/BeforeAfterMap.tsx`): as duas imagens ficam no mesmo mapa e só uma é opaca por vez, então
+  alternar é instantâneo e a vista não mexe. Botão de duas datas embaixo do mapa (a imagem mostrada é o bloco de
+  tinta com borda amarela); teclado em qualquer lugar da página: `Espaço` alterna, `B` antes, `A` depois. As duas
+  imagens baixam em paralelo, com progresso. A caixa "Usual water outline" desenha a linha d'água do mapa base por
+  cima, para comparar com a água escura do radar. Uso: `<BeforeAfterMap before={{passId, date}} after={...}
+  initialBbox pairBbox>{marcadores}</BeforeAfterMap>`; quando `pairBbox` muda, o mapa enquadra a nova área.
+- **História** (`features/story/`): tudo vem de `useStory`. Abre enquadrada nos lugares da história (Lajeado, baixo
+  Taquari, Jacuí e Guaíba) com o primeiro par em destaque; escolher outro par enquadra a parte da área que ele cobre.
+- **Comparação** (`features/compare/`): aceita duas passagens quaisquer, põe em ordem de data, avisa em texto claro
+  quando a geometria de visada difere e mostra mensagem para id ausente ou desconhecido.
 
 ## Testes
 

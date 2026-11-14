@@ -1,39 +1,32 @@
-// PLACEHOLDER: the story page is owned by the next agent. What is real here is the alignment check:
-// it draws the "after" image of the first featured pair with BrowseImageLayer, positioned by georef.corners.
-import { useState } from "react";
+// Story page: the narrative from /api/stories/:id on the left, the before/after viewer on the map.
+// All story text is rendered as the API returns it.
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import { Marker } from "react-map-gl/maplibre";
+import { Marker, useMap } from "react-map-gl/maplibre";
 import { describeError } from "../../api/client";
 import { useStory } from "../../api/hooks";
-import type { StoryPlace } from "../../api/types";
+import type { Story, StoryPair, StoryPlace } from "../../api/types";
+import { regionNameInSentence } from "../../api/regionNames";
 import { paths } from "../../app/paths";
 import { BaseMap } from "../../map/BaseMap";
-import { BrowseImageLayer, useBrowseImage } from "../../map/BrowseImageLayer";
-import { BrowseImageStatus } from "../../map/BrowseImageStatus";
-import { ShorelineOverlay } from "../../map/layers";
+import { BeforeAfterMap } from "../../map/BeforeAfterMap";
+import { describeGeometry } from "../../map/beforeAfter";
 import { ErrorMessage, ProgressBar, StaleNotice } from "../../ui/feedback";
-import { formatDateLong } from "../../ui/format";
+import { formatDateLong, plural } from "../../ui/format";
 import { MapPageLayout, PageTitle, SectionTitle } from "../../ui/MapPageLayout";
+import { featuredPairs, otherPairs, pairDates, pairFocus, pairKey, pairTiming, storyOpeningArea } from "./storyLogic";
 
-function PlaceLabel({ place }: { place: StoryPlace }) {
-  return (
-    <Marker longitude={place.lon} latitude={place.lat} anchor="left" offset={[-4, 0]}>
-      <span className="pointer-events-none flex items-center gap-1.5">
-        <span aria-hidden className="size-2 rounded-full border-[1.5px] border-ink bg-signal" />
-        <span className="place rounded-[2px] bg-sheet/85 px-1 text-[13px] leading-tight text-ink">{place.name}</span>
-      </span>
-    </Marker>
-  );
+interface PlaceTarget {
+  place: StoryPlace;
+  /** Changes on every choice, so choosing the same place again moves the map back to it. */
+  nonce: number;
 }
 
 export function StoryPage() {
   const { storyId } = useParams();
   const story = useStory(storyId);
-  const pair = story.data?.pairs.find((p) => p.featured) ?? story.data?.pairs[0];
-  const afterPassId = pair?.after.id;
-  const image = useBrowseImage(afterPassId);
-  const [showShoreline, setShowShoreline] = useState(true);
-  const [opacity, setOpacity] = useState(1);
+  const [chosenPair, setChosenPair] = useState<string>();
+  const [target, setTarget] = useState<PlaceTarget>();
 
   if (story.isError) {
     return (
@@ -49,16 +42,75 @@ export function StoryPage() {
     return (
       <div className="mx-auto max-w-xl px-5 py-16">
         <ProgressBar label="Loading the story" />
-        <p className="mt-3 text-ink-2">Loading the story…</p>
+        <p className="mt-3 text-ink-2">Loading the story and its radar passes. The first time, this can take a few seconds.</p>
       </div>
     );
   }
 
   const s = story.data;
-  const initialBbox = pair?.browse?.after.georef?.bounds ?? s.region.bbox;
+  const featured = featuredPairs(s);
+  const pair = featured.find((p) => pairKey(p) === chosenPair) ?? featured[0];
+  const openingArea = storyOpeningArea(s.places, s.region.bbox);
+  const choosePlace = (place: StoryPlace) => setTarget({ place, nonce: Date.now() });
 
-  const panel = (
-    <div className="flex flex-col gap-6">
+  const mapChildren = (
+    <>
+      {s.places.map((p) => (
+        <PlaceMarker key={p.name} place={p} selected={target?.place.name === p.name} onChoose={choosePlace} />
+      ))}
+      <FlyToPlace target={target} />
+    </>
+  );
+
+  const map = pair ? (
+    <BeforeAfterMap
+      before={{ passId: pair.before.id, date: pair.before.date }}
+      after={{ passId: pair.after.id, date: pair.after.date }}
+      initialBbox={openingArea}
+      pairBbox={pairFocus(pair, openingArea)}
+    >
+      {mapChildren}
+    </BeforeAfterMap>
+  ) : (
+    <BaseMap initialBbox={openingArea}>{mapChildren}</BaseMap>
+  );
+
+  return (
+    <MapPageLayout
+      panelLabel="Story"
+      map={map}
+      panel={
+        <StoryPanel
+          story={s}
+          featured={featured}
+          pair={pair}
+          onChoosePair={(p) => setChosenPair(pairKey(p))}
+          selectedPlace={target?.place.name}
+          onChoosePlace={choosePlace}
+        />
+      }
+    />
+  );
+}
+
+function StoryPanel({
+  story: s,
+  featured,
+  pair,
+  onChoosePair,
+  selectedPlace,
+  onChoosePlace,
+}: {
+  story: Story;
+  featured: StoryPair[];
+  pair: StoryPair | undefined;
+  onChoosePair: (p: StoryPair) => void;
+  selectedPlace: string | undefined;
+  onChoosePlace: (p: StoryPlace) => void;
+}) {
+  const others = otherPairs(s);
+  return (
+    <div className="flex flex-col gap-7">
       <header className="flex flex-col gap-3">
         <PageTitle>{s.title}</PageTitle>
         <p className="text-[15px] leading-[1.55] text-ink-2">{s.subtitle}</p>
@@ -66,80 +118,211 @@ export function StoryPage() {
       </header>
       <StaleNotice dataSource={s.dataSource} />
 
-      {pair ? (
-        <section className="flex flex-col gap-3" aria-labelledby="check-title">
-          <SectionTitle id="check-title">Image alignment check</SectionTitle>
-          <p className="text-[14px] leading-[1.55] text-ink-2">
-            The map shows the radar image from {formatDateLong(pair.after.date)}, the day after the event. Calm water is dark
-            in radar, so the shores of Lake Guaíba and the channels of the Jacuí delta should sit on the yellow line, which is
-            the basemap's water outline. Zoom in on Porto Alegre to compare.
-          </p>
-          <label className="flex items-center gap-2 text-[14px]">
-            <input
-              type="checkbox"
-              checked={showShoreline}
-              onChange={(e) => setShowShoreline(e.target.checked)}
-              className="size-4 accent-ink"
-            />
-            Show the basemap's water outline
-          </label>
-          <label className="flex flex-col gap-1 text-[14px]">
-            <span>Image opacity</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={opacity}
-              onChange={(e) => setOpacity(Number(e.target.value))}
-              className="accent-ink"
-            />
-          </label>
-          <dl className="num grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px] text-ink-2">
-            <dt>Pass</dt>
-            <dd className="break-all text-ink">{pair.after.id}</dd>
-            {image.status === "ready" || image.status === "loading-image" ? (
-              <>
-                <dt>Fit error</dt>
-                <dd className="text-ink">
-                  {image.georef.rmsErrorPx.toFixed(2)} px, pixel aspect {image.georef.pixelAspect.toFixed(3)}, quality{" "}
-                  {image.georef.quality}
-                </dd>
-              </>
-            ) : null}
-          </dl>
-        </section>
-      ) : (
-        <p className="text-ink-2">This story has no before and after pair yet.</p>
-      )}
+      <p className="text-[15px] leading-[1.55] text-ink">{s.narrative.summary}</p>
 
-      <p className="border-t border-rule pt-4 text-[13px] text-ink-3">
-        The full story page is being built. For now this page checks that radar images line up with the map.
-      </p>
+      <section className="flex flex-col gap-3" aria-labelledby="pairs-title">
+        <SectionTitle id="pairs-title">Before and after</SectionTitle>
+        {pair ? (
+          <>
+            <p className="text-[14px] leading-[1.55] text-ink-2">
+              Each pair is two radar images of the same strip, taken from the same position in orbit. Flip
+              between them on the map to see what changed.
+            </p>
+            {featured.length > 1 ? (
+              <ul className="flex flex-col gap-1.5" aria-label="Pairs of images">
+                {featured.map((p) => (
+                  <li key={pairKey(p)}>
+                    <PairOption pair={p} selected={p === pair} onChoose={() => onChoosePair(p)} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <PairSummary pair={pair} />
+            )}
+            <Link to={paths.compare(pair.before.id, pair.after.id)} className="link self-start text-[14px]">
+              Details of these two passes
+            </Link>
+          </>
+        ) : (
+          <p className="text-[14px] text-ink-2">This story has no before and after pair yet.</p>
+        )}
+      </section>
+
+      <TextList title="What to look for" id="look-title" items={s.narrative.whatToLookFor} />
+
+      {s.places.length > 0 ? (
+        <section className="flex flex-col gap-2" aria-labelledby="places-title">
+          <SectionTitle id="places-title">Places</SectionTitle>
+          <ul className="flex flex-col">
+            {s.places.map((p) => (
+              <li key={p.name}>
+                <button
+                  type="button"
+                  onClick={() => onChoosePlace(p)}
+                  aria-pressed={selectedPlace === p.name}
+                  className={`flex w-full items-center gap-2.5 rounded-[3px] px-2 py-1.5 text-left hover:bg-signal-wash ${
+                    selectedPlace === p.name ? "bg-signal-wash" : ""
+                  }`}
+                >
+                  <span aria-hidden className="size-2.5 shrink-0 rounded-full border-[1.5px] border-ink bg-signal" />
+                  <span className="place text-[16px] text-ink">{p.name}</span>
+                  <span className="ml-auto text-[12px] text-ink-3">Go there</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <TextList title="Why it happened" id="why-title" items={s.narrative.physicalDrivers} />
+      <TextList title="Keep in mind" id="caveats-title" items={s.narrative.caveats} />
+
+      {s.sources.length > 0 ? (
+        <section className="flex flex-col gap-2" aria-labelledby="sources-title">
+          <SectionTitle id="sources-title">Sources</SectionTitle>
+          <ul className="flex flex-col gap-2.5 text-[14px] leading-snug">
+            {s.sources.map((src) => (
+              <li key={src.url}>
+                <a href={src.url} target="_blank" rel="noreferrer" className="link font-[500]">
+                  {src.title}
+                </a>
+                <span className="block text-[12px] text-ink-3">{src.publisher}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {others.length > 0 ? (
+        <section className="flex flex-col gap-2 border-t border-ink pt-4" aria-labelledby="others-title">
+          <SectionTitle id="others-title">More pairs around the event</SectionTitle>
+          <p className="text-[13px] leading-snug text-ink-2">
+            Other strips that touch {regionNameInSentence(s.region)}, with a pass before and after {formatDateLong(s.eventDate)}. Each opens on its
+            own page.
+          </p>
+          <ul className="flex flex-col divide-y divide-rule border-y border-rule">
+            {others.map((p) => (
+              <li key={pairKey(p)}>
+                <Link
+                  to={paths.compare(p.before.id, p.after.id)}
+                  className="group flex items-baseline justify-between gap-3 px-1 py-1.5 hover:bg-signal-wash"
+                >
+                  <span className="num text-[14px] font-[600] text-ink underline decoration-rule-strong underline-offset-[3px] group-hover:decoration-ink">
+                    {pairDates(p)}
+                  </span>
+                  <span className="num text-[12px] text-ink-3">{describeGeometry(p)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
+}
 
+function PairOption({ pair, selected, onChoose }: { pair: StoryPair; selected: boolean; onChoose: () => void }) {
   return (
-    <MapPageLayout
-      panelLabel="Story"
-      panel={panel}
-      map={
-        <BaseMap
-          initialBbox={initialBbox}
-          initialPadding={24}
-          overlay={
-            <div className="absolute left-3 top-3">
-              <BrowseImageStatus image={image} />
-            </div>
-          }
-        >
-          <BrowseImageLayer image={image} opacity={opacity} />
-          <ShorelineOverlay visible={showShoreline} />
-          {s.places.map((p) => (
-            <PlaceLabel key={p.name} place={p} />
-          ))}
-        </BaseMap>
-      }
-    />
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onChoose}
+      className={`flex w-full flex-col gap-0.5 rounded-[3px] border-l-[3px] px-3 py-2 text-left ${
+        selected ? "border-ink bg-signal-wash" : "border-transparent hover:bg-signal-wash/60"
+      }`}
+    >
+      <PairText pair={pair} />
+    </button>
   );
+}
+
+function PairSummary({ pair }: { pair: StoryPair }) {
+  return (
+    <div className="flex flex-col gap-0.5 border-l-[3px] border-ink bg-signal-wash px-3 py-2">
+      <PairText pair={pair} />
+    </div>
+  );
+}
+
+function PairText({ pair }: { pair: StoryPair }) {
+  return (
+    <>
+      <span className="num text-[15px] font-[650] text-ink">{pairDates(pair)}</span>
+      <span className="text-[13px] leading-snug text-ink-2">{pairTiming(pair)}</span>
+      {pair.placesCovered.length > 0 ? (
+        <span className="text-[13px] leading-snug text-ink-2">
+          Shows{" "}
+          {pair.placesCovered.map((name, i) => (
+            <span key={name}>
+              {i > 0 ? (i === pair.placesCovered.length - 1 ? " and " : ", ") : null}
+              <span className="place text-ink">{name}</span>
+            </span>
+          ))}
+        </span>
+      ) : null}
+      <span className="num text-[12px] text-ink-3">
+        {describeGeometry(pair)}, {plural(pair.daysApart, "day", "days")} apart
+      </span>
+    </>
+  );
+}
+
+function TextList({ title, id, items }: { title: string; id: string; items: string[] }): ReactNode {
+  if (items.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2" aria-labelledby={id}>
+      <SectionTitle id={id}>{title}</SectionTitle>
+      <ul className="flex list-disc flex-col gap-2 pl-4 text-[14px] leading-[1.55] text-ink-2 marker:text-ink-3">
+        {items.map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** Signal-yellow dot with an ink ring and a serif italic label. A button: choosing it moves the map there. */
+function PlaceMarker({
+  place,
+  selected,
+  onChoose,
+}: {
+  place: StoryPlace;
+  selected: boolean;
+  onChoose: (p: StoryPlace) => void;
+}) {
+  return (
+    <Marker longitude={place.lon} latitude={place.lat} anchor="left" offset={[-6, 0]}>
+      <button
+        type="button"
+        onClick={() => onChoose(place)}
+        aria-label={`Go to ${place.name}`}
+        className="flex items-center gap-1.5 rounded-[3px] focus-visible:outline-offset-2"
+      >
+        <span
+          aria-hidden
+          className={`shrink-0 rounded-full border-2 border-ink bg-signal ${selected ? "size-3.5" : "size-3"}`}
+        />
+        <span
+          className={`place rounded-[2px] px-1 text-[14px] leading-tight text-ink ${selected ? "bg-signal-wash" : "bg-sheet/90"}`}
+        >
+          {place.name}
+        </span>
+      </button>
+    </Marker>
+  );
+}
+
+function FlyToPlace({ target }: { target: PlaceTarget | undefined }) {
+  const { current } = useMap();
+  useEffect(() => {
+    if (!current || !target) return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    current.flyTo({
+      center: [target.place.lon, target.place.lat],
+      zoom: Math.max(current.getZoom(), 10.5),
+      duration: reduced ? 0 : 900,
+    });
+  }, [current, target]);
+  return null;
 }
