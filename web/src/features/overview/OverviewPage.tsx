@@ -6,7 +6,7 @@ import { useCoverage, useRegions, useRegionsGeoJSON, useStories, useStory } from
 import { ErrorMessage, StaleNotice } from "../../ui/feedback";
 import { MapPageLayout, PageTitle } from "../../ui/MapPageLayout";
 import { CoverageMap } from "./CoverageMap";
-import { MonthPicker } from "./MonthPicker";
+import { MonthPicker } from "../../ui/MonthPicker";
 import { RegionPicker } from "./RegionPicker";
 import { RegionSummary } from "./RegionSummary";
 import { StoryCard } from "./StoryCard";

@@ -1,12 +1,15 @@
 import { useId } from "react";
-import type { MonthKey } from "../../api/dates";
-import type { DateWindow, IsoDate } from "../../api/types";
-import { ProgressBar } from "../../ui/feedback";
-import { formatDayRange, formatDayShort, formatMonth } from "../../ui/format";
+import { monthOf, type MonthKey } from "../api/dates";
+import type { DateWindow, IsoDate } from "../api/types";
+import { ProgressBar } from "./feedback";
+import { formatDayRange, formatDayShort, formatMonth } from "./format";
 
 interface Props {
   months: MonthKey[];
-  value: MonthKey;
+  /** Chosen month, or null when the period is not a whole month (then `customLabel` names it). */
+  value: MonthKey | null;
+  /** Label for a period that is not a month, e.g. "Last 30 days". Used only when `value` is null. */
+  customLabel?: string;
   period: DateWindow;
   onChange: (month: MonthKey) => void;
   loading: boolean;
@@ -33,12 +36,20 @@ const stepBtn =
   "grid size-10 place-items-center rounded-[4px] border border-rule bg-sheet text-ink transition-colors hover:border-rule-strong disabled:cursor-not-allowed disabled:text-rule-strong disabled:hover:border-rule";
 
 /** Month picker: previous / list / next. From October 2025 (first data) to the current month. */
-export function MonthPicker({ months, value, period, onChange, loading, lastDate }: Props) {
+export function MonthPicker({ months, value, customLabel, period, onChange, loading, lastDate }: Props) {
   const id = useId();
-  const i = months.indexOf(value);
-  const prev = i > 0 ? months[i - 1] : undefined;
-  const next = i < months.length - 1 ? months[i + 1] : undefined;
+  const i = value ? months.indexOf(value) : -1;
+  let prev = i > 0 ? months[i - 1] : undefined;
+  let next = i >= 0 && i < months.length - 1 ? months[i + 1] : undefined;
   const isCurrent = i === months.length - 1;
+  // A period that is not a month: the arrows go to the months it starts and ends in.
+  if (!value && period.start && period.end) {
+    const a = monthOf(new Date(period.start + "T00:00:00Z"));
+    const b = monthOf(new Date(period.end + "T00:00:00Z"));
+    prev = months.includes(a) ? a : undefined;
+    next = b !== a && months.includes(b) ? b : undefined;
+  }
+  const periodLabel = value ? formatMonth(value) : "the chosen period";
 
   return (
     <div className="flex flex-col gap-2">
@@ -58,10 +69,15 @@ export function MonthPicker({ months, value, period, onChange, loading, lastDate
         <div className="relative min-w-0 flex-1">
           <select
             id={id}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
+            value={value ?? ""}
+            onChange={(e) => e.target.value && onChange(e.target.value)}
             className="h-10 w-full cursor-pointer appearance-none rounded-[4px] border border-rule bg-sheet pl-3 pr-9 text-[15px] font-[600] text-ink hover:border-rule-strong"
           >
+            {value ? null : (
+              <option value="" disabled>
+                {customLabel ?? "Choose a month"}
+              </option>
+            )}
             {[...months].reverse().map((m) => (
               <option key={m} value={m}>
                 {formatMonth(m)}
@@ -85,8 +101,8 @@ export function MonthPicker({ months, value, period, onChange, loading, lastDate
       <div className="min-h-[38px]" aria-live="polite">
         {loading ? (
           <div className="flex flex-col gap-1.5 pt-1">
-            <ProgressBar label={`Counting passes in ${formatMonth(value)}`} />
-            <p className="text-[13px] text-ink-2">Counting passes in {formatMonth(value)} in NASA's catalog. This can take a few seconds.</p>
+            <ProgressBar label={`Counting passes in ${periodLabel}`} />
+            <p className="text-[13px] text-ink-2">Counting passes in {periodLabel} in NASA's catalog. This can take a few seconds.</p>
           </div>
         ) : (
           <p className="text-[13px] leading-snug text-ink-3">
