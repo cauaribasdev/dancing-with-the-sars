@@ -44,14 +44,14 @@ Respostas que vêm do catálogo trazem `dataSource` (e o header `X-Data-Source`)
 | `GET /coverage?start&end` | Cobertura por estado no Brasil inteiro (máx. 31 dias), para colorir o mapa |
 | `GET /passes/:id` | Uma passagem pelo id |
 | `GET /passes/:id/browse` | URL da imagem de prévia + **cantos georreferenciados** (formato da fonte `image` do MapLibre) |
-| `GET /stories` · `GET /stories/:id` | Histórias curadas. `rs-cheia-jul-2026` devolve narrativa, fontes, passagens e pares destacados já georreferenciados |
+| `GET /stories` · `GET /stories/:id` | Histórias curadas. `rs-flood-jul-2026` devolve narrativa, fontes, passagens e pares destacados já georreferenciados |
 
 Limites de período: país 31 dias, macrorregião 92 dias, estado 366 dias. O motivo é o tamanho: cada registro do catálogo tem cerca de 29 KB e o Brasil tem cerca de 1.500 passagens por mês.
 
 Exemplos:
 
 ```bash
-curl "localhost:8787/api/stories/rs-cheia-jul-2026"
+curl "localhost:8787/api/stories/rs-flood-jul-2026"
 curl "localhost:8787/api/regions/rs/pairs?start=2026-07-01&end=2026-08-05&eventDate=2026-07-22"
 curl "localhost:8787/api/coverage?start=2026-07-01&end=2026-07-31"
 ```

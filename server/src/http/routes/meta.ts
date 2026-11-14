@@ -18,7 +18,7 @@ export function metaRoutes() {
       ],
       attribution: [
         { name: 'NASA-ISRO NISAR via NASA CMR / ASF DAAC', url: 'https://cmr.earthdata.nasa.gov/search' },
-        { name: 'Limites territoriais: IBGE', url: 'https://servicodados.ibge.gov.br/api/docs/malhas?versao=3' },
+        { name: 'Territorial boundaries: IBGE', url: 'https://servicodados.ibge.gov.br/api/docs/malhas?versao=3' },
       ],
     }),
   );

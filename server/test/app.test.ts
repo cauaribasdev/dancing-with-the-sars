@@ -68,9 +68,9 @@ describe('API', () => {
     expect(body.georef.corners).toHaveLength(4);
   });
 
-  it('GET /api/stories/rs-cheia-jul-2026 resolves featured pairs with browse info', async () => {
+  it('GET /api/stories/rs-flood-jul-2026 resolves featured pairs with browse info', async () => {
     const { app } = setup();
-    const { status, body } = await get(app, '/api/stories/rs-cheia-jul-2026');
+    const { status, body } = await get(app, '/api/stories/rs-flood-jul-2026');
     expect(status).toBe(200);
     const pair = body.pairs[0];
     expect(pair.featured).toBe(true);

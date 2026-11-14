@@ -2,57 +2,57 @@ import type { StoryDefinition } from '../../domain/story';
 
 export const STORIES: StoryDefinition[] = [
   {
-    id: 'rs-cheia-jul-2026',
-    title: 'Cheia de julho de 2026 no Rio Grande do Sul',
-    subtitle: 'Vale do Taquari, Rio Caí e Guaíba vistos pelo radar NISAR antes e depois',
+    id: 'rs-flood-jul-2026',
+    title: 'July 2026 flood in Rio Grande do Sul',
+    subtitle: 'Taquari Valley, Caí River and Guaíba seen by the NISAR radar before and after',
     regionId: 'rs',
     eventDate: '2026-07-22',
     window: { start: '2026-07-01', end: '2026-08-05' },
     places: [
       { name: 'Porto Alegre / Guaíba', lon: -51.23, lat: -30.03 },
-      { name: 'Lajeado (Vale do Taquari)', lon: -51.96, lat: -29.47 },
-      { name: 'Montenegro (Rio Caí)', lon: -51.46, lat: -29.69 },
+      { name: 'Lajeado (Taquari Valley)', lon: -51.96, lat: -29.47 },
+      { name: 'Montenegro (Caí River)', lon: -51.46, lat: -29.69 },
     ],
     narrative: {
       summary:
-        'Em 22 de julho de 2026, chuvas intensas fizeram o rio Taquari ultrapassar a cota de inundação. ' +
-        'O rio Caí entrou em alerta vermelho e mais de 160 municípios gaúchos foram afetados, segundo a imprensa. ' +
-        'O radar do NISAR enxerga através das nuvens, então registrou a região durante a chuva, quando satélites ópticos só veem nuvem.',
+        'On July 22, 2026, heavy rain pushed the Taquari River above flood level. ' +
+        'The Caí River went on red alert and more than 160 municipalities in Rio Grande do Sul were affected, according to press reports. ' +
+        "NISAR's radar sees through clouds, so it recorded the region during the rain, when optical satellites only see clouds.",
       whatToLookFor: [
-        'Água parada (rios, lagoas, áreas inundadas) reflete o pulso do radar para longe do satélite e aparece escura.',
-        'Vegetação e áreas construídas parcialmente alagadas podem ficar mais claras em HH: o sinal bate na água e volta pelo tronco ou pela parede ("double bounce").',
-        'Compare apenas imagens do mesmo stackId (mesma trilha, direção e frame): mudar a geometria de visada muda o brilho mesmo sem mudança no chão.',
+        'Still water (rivers, lakes, flooded areas) reflects the radar pulse away from the satellite and appears dark.',
+        'Partly flooded vegetation and built-up areas can look brighter in HH: the signal hits the water and bounces back off tree trunks or walls ("double bounce").',
+        'Only compare images with the same stackId (same track, direction and frame): changing the viewing geometry changes the brightness even when nothing changed on the ground.',
       ],
       physicalDrivers: [
-        'Chuva intensa e persistente nas bacias do Taquari, Caí, Jacuí e Sinos, que drenam para o Guaíba.',
-        'Meteorologistas associaram o episódio ao El Niño 2026/2027, que tende a aumentar as chuvas no Sul do Brasil.',
-        'Vales encaixados, como o do Taquari, concentram e aceleram a água; a planície do delta do Jacuí e do Guaíba acumula.',
+        'Heavy, persistent rain in the Taquari, Caí, Jacuí and Sinos river basins, which drain into the Guaíba.',
+        'Meteorologists linked the event to the 2026/2027 El Niño, which tends to bring more rain to southern Brazil.',
+        'Deep, narrow valleys such as the Taquari concentrate the water and speed it up; the plain of the Jacuí delta and the Guaíba collects it.',
       ],
       caveats: [
-        'As imagens de prévia (browse) são renderizações visuais, não valores calibrados de retroespalhamento.',
-        'Vento forte deixa a superfície da água rugosa, e ela pode aparecer clara em vez de escura.',
-        'Uma passagem pode ocorrer antes ou depois do pico da cheia; o nível dos rios muda de hora em hora.',
-        'Datas e números do evento vêm da imprensa; confirme com a Defesa Civil do RS.',
+        'The preview (browse) images are visual renderings, not calibrated backscatter values.',
+        'Strong wind makes the water surface rough, and then it can appear bright instead of dark.',
+        'A pass can happen before or after the flood peak; river levels change from hour to hour.',
+        'Event dates and numbers come from the press; check them with the Rio Grande do Sul Civil Defense.',
       ],
     },
     sources: [
       {
-        title: 'Cheia de 22/07 apontada como a primeira grande inundação associada ao El Niño 2026/2027',
+        title: 'July 22 flood identified as the first major flood linked to the 2026/2027 El Niño',
         publisher: 'Diário do Comércio',
         url: 'https://diariodocomercio.com.br/geral/?p=4968',
       },
       {
-        title: 'Governador visita o Vale do Taquari após a primeira enchente de 2026',
+        title: 'Governor visits the Taquari Valley after the first flood of 2026',
         publisher: 'Jornal do Comércio',
         url: 'https://www.jornaldocomercio.com/jornal-cidades/2026/07/1257468-leite-visita-vale-do-taquari-e-admite-falha-na-comunicacao-de-alertas.html',
       },
       {
-        title: 'Chuvas no RS: danos se espalham e cheia do Rio Caí ameaça Porto Alegre',
+        title: 'Rain in Rio Grande do Sul: damage spreads and the Caí River flood threatens Porto Alegre',
         publisher: 'Band',
         url: 'https://www.band.com.br/noticias/jornal-da-band/ultimas/chuvas-no-rs-danos-se-espalham-e-cheia-do-rio-cai-ameaca-porto-alegre-202607232019',
       },
       {
-        title: 'Chuvas causam danos em 85 cidades e deixam rios sob risco muito alto no RS',
+        title: 'Rain causes damage in 85 cities and leaves rivers at very high risk in Rio Grande do Sul',
         publisher: 'Brasil de Fato',
         url: 'https://www.brasildefato.com.br/2026/07/29/chuvas-causam-danos-em-85-cidades-e-deixam-rios-sob-risco-muito-alto-no-rs/',
       },
