@@ -148,3 +148,8 @@ Base: `/api`. Datas em `YYYY-MM-DD` (UTC). Sem `start` e `end`, vale o período 
 - **Testes sem rede:** os testes usam os fakes de `server/test/helpers.ts` e um registro real do catálogo em `test/fixtures/`. Nenhum teste chama a NASA.
 - **Não invente dado:** registro do catálogo sem um campo necessário é descartado, não preenchido. Fatos sobre um evento entram com a fonte citada.
 - **Windows:** parar `npm run dev` pode deixar o processo `node` vivo na porta. Para liberar, ache o PID com `netstat -ano | findstr :8787` e encerre com `Stop-Process -Id <PID>`.
+
+
+## Estado atual e evolução aprovada
+
+O seletor e a página regional atuais ainda aceitam país e macrorregiões; a restrição a estados é uma evolução aprovada, ainda não implementada. Preserve hooks, apiGet e tipos JSON no frontend; não importe server/. URL representa estado compartilhável, TanStack Query dados remotos e componentes interações efêmeras. PNGs usam somente georef.corners de qualidade utilizável. Veja [frontend.md](frontend.md).

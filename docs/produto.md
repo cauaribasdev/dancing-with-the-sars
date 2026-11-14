@@ -9,7 +9,7 @@ As rotas, com parâmetros e respostas, estão em [rotas.md](rotas.md). A arquite
 ## 1. Em uma frase
 
 O usuário abre um mapa do Brasil, escolhe um estado e vê:
-- o que o radar NISAR registrou ali (mudanças na água, no solo e na superfície);
+- onde e quando o radar NISAR observou o estado e quais imagens podem ser comparadas visualmente;
 - um painel com os números mais importantes;
 - um feed de publicações;
 - um feed de alertas;
@@ -63,14 +63,7 @@ O painel é montado no navegador com dados que já existem ou que as rotas novas
 
 ## 4. Feed de publicações (Posts)
 
-**Decisão em aberto.** O pedido fala em "feed de publicações", mas não diz quem publica. Há duas opções que cabem na arquitetura atual, que não tem login nem banco de dados:
-
-| Opção | Quem publica | Esforço |
-|---|---|---|
-| **A. Publicações geradas pelo app** (recomendada) | O próprio sistema, a partir dos dados: "Nova passagem do radar sobre o RS em 05/11", "Novo par antes/depois disponível na faixa 053-D-103", "História: cheia de julho de 2026" | Baixo. Usa dados que a API já tem |
-| B. Publicações da equipe | A equipe escreve textos curtos por estado, com fonte citada, num arquivo de definições como o das histórias | Baixo, mas é conteúdo manual e cada fato precisa de fonte |
-
-Recomendação: fazer A agora. B entra como itens fixos, se sobrar tempo. Publicações de moradores ficam fora, porque exigiriam login, banco e moderação.
+**Decisão aceita:** publicações geradas automaticamente pelo app a partir de passagens, pares e histórias. Conteúdo editorial com fontes é uma extensão opcional. A funcionalidade e sua rota ainda não estão implementadas. Publicações de moradores permanecem fora do escopo.
 
 Cada publicação tem: tipo (`pass`, `pair` ou `story`), data, título, texto curto e um link para a tela certa. A ordem é da mais recente para a mais antiga.
 
@@ -119,6 +112,9 @@ Isto vale para o texto da tela e para a apresentação.
 
 ## 9. Perguntas para a equipe
 
-1. **Feed de publicações:** opção A ou B (seção 4)?
 2. **GlobalGiving:** alguém vai criar a chave? Sem ela, a seção não entra.
 3. **Interferograma (GUNW):** alguém tem tempo de testar se existe prévia aberta? Sem isso, "mudanças geológicas" fica fora da demonstração.
+
+## Decisões de frontend aceitas
+
+As decisões de navegação, compatibilidade de links, fuso UTC, proximidade e cache estão em [frontend.md](frontend.md). A aba Alerts solicita `include=recent`; alertas atuais são independentes do período do radar. Selos nacionais fazem parte do núcleo; polígonos e marcadores são extensões. A comparação em destaque é um par visual, não uma mudança detectada automaticamente.

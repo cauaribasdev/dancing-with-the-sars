@@ -184,3 +184,8 @@ dentro dos limites. O dia e a passagem escolhidos ficam na URL (`day`, `pass`) p
 
 `npm test -w web` roda os testes em `src/**/*.test.ts`: períodos de mês (UTC, fevereiro, limite de 31 dias), escala de
 cor (limites das classes, expressão MapLibre), regra de exibição da imagem e formatação. Sem snapshots.
+
+
+## Estado atual e evolução aprovada
+
+A implementação atual ainda aceita país e macrorregiões. A evolução aprovada restringe a interface a estados e adiciona as cinco abas descritas em [frontend.md](../docs/frontend.md). Links legados com day ou pass e sem tab abrirão Radar; os demais abrirão Overview. Os endpoints novos ainda não existem.

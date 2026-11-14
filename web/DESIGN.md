@@ -120,3 +120,15 @@ Proibido: caixa alta em rótulos, rótulo-sobrancelha acima de título, `A · B 
    over Rio Grande do Sul on 20 days.") seguida de uma tabela de fatos.
 5. **Legenda em degraus encostados** (como escala hipsométrica), em vez de gradiente contínuo: as classes são fixas
    e comparáveis entre meses.
+
+## Abas estaduais e novas seções — decisões aprovadas
+
+Manter a identidade visual existente, o painel desktop de 380 px e o mapa primeiro no mobile com 58svh e mínimo de 320 px. A faixa de cinco abas permite rolagem horizontal, mantém a aba focada visível e diferencia foco de seleção. Usar semântica tablist/tab/tabpanel, setas, Home/End e ativação por Enter ou Space. Preservar a câmera ao trocar de aba.
+
+Overview apresenta números, comparação visual, alertas, organizações, história e contatos de emergência. Radar preserva calendário e detalhe. Posts mostra tipo, data, texto e ação; Help mostra referência de distância, filtros, total, itens e aviso de não endosso. Cartões longos de alertas permitem expansão por teclado sem eliminar texto oficial.
+
+Cada seção diferencia carregamento, vazio, erro, atualização e dados antigos, com texto e ícone além da cor e retry contextual. “No active alerts” exige consulta bem-sucedida; falha usa “Alerts could not be checked”. Textos oficiais permanecem em português com lang apropriado.
+
+A cor de severidade é fornecida pelo INMET; somente moderate #FFFE00 é exemplificado. Usar fallback neutro para cor ausente ou inválida. A seleção no mapa usa amarelo de anotação com contorno escuro, distinguido por legenda, texto e ícone. Selos nacionais indicam alertas ativos. Polígonos de alertas e marcadores de organizações são extensões aprovadas fora do núcleo mínimo, com alternativa em lista e sem encobrir controles ou rótulos.
+
+Verificar foco visível, contraste, toque, zoom, reflow e movimento reduzido. Não declarar conformidade certificada sem avaliação correspondente.
