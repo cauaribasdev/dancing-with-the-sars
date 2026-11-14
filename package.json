@@ -1,0 +1,14 @@
+{
+  "name": "dancing-with-the-sars",
+  "private": true,
+  "description": "NASA Space Apps 2026 - Dancing with the SARs: NISAR surface-change explorer for Brazil",
+  "workspaces": [
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w server",
+    "start": "npm run start -w server",
+    "test": "npm test -w server",
+    "typecheck": "npm run typecheck -w server"
+  }
+}

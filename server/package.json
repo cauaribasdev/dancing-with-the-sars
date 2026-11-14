@@ -1,0 +1,34 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "boundaries": "tsx scripts/fetch-boundaries.ts",
+    "check:browse": "tsx scripts/check-browse-bounds.ts",
+    "warm": "tsx scripts/warm-cache.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.8",
+    "@hono/zod-validator": "^0.9.1",
+    "@turf/bbox": "^7.4.0",
+    "@turf/boolean-intersects": "^7.4.0",
+    "@turf/boolean-point-in-polygon": "^7.4.0",
+    "@turf/helpers": "^7.4.0",
+    "hono": "^4.13.18",
+    "pngjs": "^7.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^26.6.6",
+    "@types/pngjs": "^6.0.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
