@@ -3,12 +3,19 @@
   "private": true,
   "description": "NASA Space Apps 2026 - Dancing with the SARs: NISAR surface-change explorer for Brazil",
   "workspaces": [
-    "server"
+    "server",
+    "web"
   ],
   "scripts": {
-    "dev": "npm run dev -w server",
+    "dev": "concurrently -n api,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "dev:api": "npm run dev -w server",
+    "dev:web": "npm run dev -w web",
     "start": "npm run start -w server",
-    "test": "npm test -w server",
-    "typecheck": "npm run typecheck -w server"
+    "build": "npm run build -w web",
+    "test": "npm test -w server -w web",
+    "typecheck": "npm run typecheck -w server -w web"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
   }
 }

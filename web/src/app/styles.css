@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+/*
+ * Project tokens (see web/DESIGN.md). Use the generated classes: bg-paper, text-ink, text-ink-2,
+ * border-rule, bg-signal, bg-cov-3, font-sans, font-place ...
+ */
+@theme {
+  --font-sans: "Archivo Variable", "Archivo", ui-sans-serif, system-ui, sans-serif;
+  /* Serif italic: names of places and waters, as on topographic charts. */
+  --font-place: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+
+  --color-paper: #f2f3f0; /* same tone as the basemap background: panel and map are one sheet of paper */
+  --color-sheet: #fbfbfa; /* surfaces on top of the map (legend, tooltip) */
+  --color-ink: #16202a; /* main text, 14.8:1 on paper */
+  --color-ink-2: #4d5965; /* secondary text, 6.4:1 */
+  --color-ink-3: #5f6a74; /* quiet text, 5.0:1 (lowest allowed for text) */
+  --color-rule: #cdd3d6; /* rules and borders */
+  --color-rule-strong: #9aa4ab;
+
+  /*
+   * Signal yellow: annotations drawn ON THE MAP (selection, pass outlines, markers).
+   * Always with an ink casing around it: alone it disappears on light paper and on the image's green.
+   * Never use it as a text color in the panel (1.45:1 on paper).
+   */
+  --color-signal: #ffc21a;
+  --color-signal-wash: #fff3cc; /* background of a selected item in the panel, with ink text (14.9:1) */
+
+  /* Coverage ramp (days with a pass), single hue, validated: monotone L, ΔL ≥ 0.06, light end 2.06:1. */
+  --color-cov-1: #67b6ce;
+  --color-cov-2: #389db9;
+  --color-cov-3: #0083a0;
+  --color-cov-4: #006a84;
+  --color-cov-5: #005067;
+  --color-cov-6: #003849;
+
+  /* Caution (stale data). Always with an icon and text, never color alone. */
+  --color-caution: #7a4a00;
+  --color-caution-wash: #fbf0d6;
+
+  /* Background behind radar images shown outside the map (thumbnails). */
+  --color-radar-ground: #1d2329;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    font-feature-settings: "kern", "liga";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  a {
+    color: inherit;
+  }
+  ::selection {
+    background: var(--color-signal-wash);
+  }
+}
+
+@layer components {
+  /* Numbers aligned in columns, without switching typeface. */
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  /* Place name: serif italic, like a chart label. */
+  .place {
+    font-family: var(--font-place);
+    font-style: italic;
+    font-weight: 500;
+    font-optical-sizing: auto;
+    letter-spacing: 0;
+  }
+  /* Text link: ink with a thin underline that thickens on hover. */
+  .link {
+    color: var(--color-ink);
+    font-weight: 600;
+    text-decoration-line: underline;
+    text-decoration-color: var(--color-rule-strong);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .link:hover {
+    text-decoration-color: var(--color-ink);
+    text-decoration-thickness: 2px;
+  }
+  /* Main action of a page: a block of ink. At most one per screen. */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 4px;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+  }
+  .btn-primary:hover {
+    background: #26323e;
+  }
+  .btn-primary:focus-visible {
+    outline-offset: 3px;
+  }
+}
+
+/* Indeterminate progress bar (coverage and image loading). */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.progress-sweep {
+  animation: sweep 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-sweep {
+    animation: none;
+    transform: none;
+    width: 100% !important;
+    opacity: 0.5;
+  }
+}
+
+/* MapLibre controls in the same visual language. */
+.maplibregl-ctrl-group {
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 1px var(--color-rule) !important;
+}
+.maplibregl-ctrl-attrib {
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--color-ink-2);
+}

@@ -5,7 +5,7 @@ Projeto para o **NASA Space Apps Challenge 2026**, desafio
 um mapa interativo do Brasil para explorar as passagens do radar **NISAR** (NASA-ISRO) e
 comparar o antes e o depois de mudanças na superfície. A primeira história é a **cheia de julho de 2026 no Rio Grande do Sul**.
 
-Este repositório tem, por enquanto, o **backend** (`server/`). O frontend (React + Vite + MapLibre) entra em `web/`.
+O repositório é um monorepo com dois workspaces npm: a **API** em `server/` (Hono) e o **site** em `web/` (Vite + React + MapLibre). A interface do site é em inglês; veja [`web/README.md`](web/README.md) e [`web/DESIGN.md`](web/DESIGN.md).
 
 ## Rodando
 
@@ -13,10 +13,15 @@ Requisitos: Node.js 22+ (testado no 24).
 
 ```bash
 npm install
-npm run dev          # API em http://localhost:8787/api (recarrega ao salvar)
-npm test             # testes (offline, sem credenciais)
-npm run typecheck
+npm run dev          # API em http://localhost:8787/api + site em http://localhost:5173, juntos
+npm run dev:api      # só a API (recarrega ao salvar)
+npm run dev:web      # só o site (o Vite faz proxy de /api para a porta 8787)
+npm run build        # build de produção do site em web/dist/
+npm test             # testes dos dois workspaces (offline, sem credenciais)
+npm run typecheck    # TypeScript dos dois workspaces
 ```
+
+Em produção, o site precisa saber onde está a API: defina `VITE_API_BASE` no build (detalhes em [`web/README.md`](web/README.md)).
 
 Scripts do servidor (`npm run <script> -w server`):
 
@@ -146,4 +151,12 @@ server/
   src/http/                   app Hono, schemas, erros, rotas por recurso (routes/)
   scripts/                    limites IBGE, validação das imagens, aquecimento do cache
   test/                       vitest (fixture real do CMR + dados sintéticos + regra de arquitetura)
+web/
+  src/main.tsx                ponto de entrada do site
+  src/app/                    rotas, casca (barra superior), providers, tokens de estilo
+  src/api/                    cliente HTTP, tipos das respostas, hooks do TanStack Query
+  src/map/                    mapa base, imagem de radar georreferenciada, camadas compartilhadas
+  src/ui/                     componentes pequenos (layout, carregando, avisos, formatação)
+  src/features/               uma pasta por página: overview, region, story, compare
+  DESIGN.md                   linguagem visual (paleta, tipografia, layout, texto)
 ```
