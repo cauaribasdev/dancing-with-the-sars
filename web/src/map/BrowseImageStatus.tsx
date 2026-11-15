@@ -34,7 +34,7 @@ export function BrowseImageStatus({ image, label = "imagem de radar", className 
   }
   return (
     <div className={box}>
-      <ErrorMessage>{image.message}</ErrorMessage>
+      <ErrorMessage onRetry={image.retry}>{image.message} ({label})</ErrorMessage>
     </div>
   );
 }

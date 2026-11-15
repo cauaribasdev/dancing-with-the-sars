@@ -20,7 +20,7 @@ Esta PR consolidada depende da PR #3 (`feat/frontend-prototipo`, por sua vez sob
 
 - 62 testes servidor / 12 arquivos e 91 testes frontend / 16 arquivos aprovados; typecheck e build TypeScript + Vite aprovados.
 - Chromium: home com imagens reais, logos, estados de erro/vazio, teclado, links antigos, desktop e mobile 320/390px; painéis opcionais com respostas controladas em 320px.
-- Smokes sintéticos: busca/seleção estadual, imagens diárias, multiday, reload, troca de estado e recorte raster/vetorial atravessando limites/furos. `web/scripts/alerts-smoke.mjs` cobre teclado, alertas vazios/preenchidos/stale, detalhe oficial, expiração local, retry isolado com Radar funcional, troca de UF sem dados antigos e 320 px.
+- Smokes sintéticos: links inválidos/legados, voltar/avançar/reload, busca estadual, Overview vazio, imagens diárias, multiday, recorte raster/vetorial, comparação incompatível com falha/retry de imagem (`compare-smoke.mjs`), Help vazio/indisponível/pan (`help-smoke.mjs`) e `alerts-smoke.mjs` (teclado, estados, UTC, expiração, retry isolado, troca de UF e resposta antiga atrasada).
 - INMET consultado ao vivo: endpoint estadual RS respondeu 200 com 4 alertas ativos; timezone CAP foi normalizado para UTC.
 - `/alerts` apresenta alertas ativos e encerrados no snapshot CAP móvel de oito dias, filtra por estado e está ligado no cabeçalho; o mapa não sobrepõe círculos e contagens aos polígonos estaduais.
 - Axe em Chromium e Firefox, depois da hidratação, nas rotas `/`, `/explore`, `/region/rs?tab=alerts`, `/compare` e `/alerts`: nenhuma violação WCAG A/AA. A nova página corrigiu contraste de texto; smoke verifica primeiro foco, tecla Enter e resumo expansível.

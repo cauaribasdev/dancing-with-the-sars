@@ -15,6 +15,8 @@ await page.route('**/api/**',async route=>{
  if(url.pathname.endsWith('/regions/geojson')) data={type:'FeatureCollection',features:states};
  else if(url.pathname.endsWith('/regions')) data={regions:states.map(f=>f.properties)};
  else if(url.pathname.endsWith('/coverage')) data={dataSource:'cache',query:{start:'2026-11-01',end:'2026-11-14',product:'GCOV'},total:summary,states:states.map(f=>({...f.properties,...summary}))};
+ else if(url.pathname==='/api/regions/sc/passes') data={dataSource:'cache',region:states.find(f=>f.properties.id==='sc').properties,query:{start:url.searchParams.get('start'),end:url.searchParams.get('end'),product:'GCOV'},summary,timeline:[],passes:[]};
+ else if(url.pathname==='/api/regions/sc/pairs') data={dataSource:'cache',region:states.find(f=>f.properties.id==='sc').properties,query:{start:url.searchParams.get('start'),end:url.searchParams.get('end'),product:'GCOV',eventDate:null,mode:'consecutive'},count:0,pairs:[]};
  else if(url.pathname.endsWith('/stories')) data={stories:[]};
  else {await route.fulfill({status:503,json:{error:{code:'upstream_unavailable',message:'Fixture de indisponibilidade'}}});return;}
  await route.fulfill({json:data});
@@ -54,6 +56,11 @@ for(const [legacy,tab] of [['/region/sc?pass=legacy-pass','radar'],['/region/sc?
  await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('tab')===tab);
  assert.equal(new URL(page.url()).searchParams.get('tab'),tab);
 }
+await page.getByText('Dados insuficientes').waitFor();
+await page.getByText('Nenhum par disponível.').waitFor();
+await page.goto('http://127.0.0.1:5173/region/sc?tab=invalid&start=bad&pass=legacy-pass');
+await page.getByText('Parâmetros inválidos. Aplicado o período padrão de 30 dias UTC.').waitFor();
+await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('tab')==='overview' && !url.searchParams.has('pass'));
 await page.goto('http://127.0.0.1:5173/explore?region=sc');
 await page.waitForURL('**/explore?region=sc');
 await page.screenshot({path:'/tmp/sars-sidebar-ux.png'});

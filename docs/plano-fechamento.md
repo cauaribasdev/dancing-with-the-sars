@@ -97,25 +97,25 @@ O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificaç
 | A02 | Verificado por smoke | `state-search-smoke.mjs` abre `br`, macrorregião e UF desconhecida; cada caminho mostra página não encontrada e volta ao mapa. |
 | A03 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem links sem `tab` com `day`/`pass`, normalizados para Radar. |
 | A04 | Verificado por unidade + smoke | O smoke abre `/region/sc` sem parâmetros, confirma Overview e normalização de URL/período. |
-| A05 | Parcial | `navigation.test.ts` testa aba e período inválidos, aviso e limpeza da seleção; falta E2E de URL. |
+| A05 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem aba/período inválidos, aviso e limpeza de seleção. |
 | A06 | Parcial | Multiday verifica recarga/seleção; falta Browser Back entre abas e restauração completa por jornada. |
 | A07 | Parcial | Multiday verifica limpeza e troca de UF; não cobre troca de período por todos os caminhos da interface. |
-| A08 | Aberto | Sem teste de duas respostas concluindo em ordem inversa para a mesma tela. |
-| A09 | Parcial | `pairs.test.ts` confirma `medianGapDays: null` com zero ou uma data; falta validar a mensagem no Overview. |
-| A10 | Parcial | `pairs.test.ts` confirma ausência de par e desempate estável por stack; falta validar a mensagem visual no Overview. |
-| A11 | Aberto | Comparação incompatível ainda requer inspeção de interface. |
+| A08 | Verificado por smoke | `alerts-smoke.mjs` libera a resposta atrasada de RS depois da resposta vazia de SC e confirma que a tela continua em SC. |
+| A09 | Verificado em unidade + smoke | `pairs.test.ts` verifica mediana nula; `state-search-smoke.mjs` confirma “Dados insuficientes” no Overview. |
+| A10 | Verificado em unidade + smoke | `pairs.test.ts` verifica ausência/desempate; `state-search-smoke.mjs` confirma “Nenhum par disponível” no Overview. |
+| A11 | Verificado por smoke | `compare-smoke.mjs` abre URL com geometrias diferentes e confirma o aviso e os dados de faixa. |
 | A12 | Parcial | `browseImage.test.ts` cobre georef nula/baixa; smoke diário confirma exclusão visual, mas falta inspecionar detalhes em estado de erro. |
-| A13 | Aberto | Imagem/WebGL indisponível exige inspeção visual/teclado; não revalidado nesta execução. |
+| A13 | Verificado por smoke | `compare-smoke.mjs` injeta falha de download, usa retry contextual e confirma o texto da comparação preservado. WebGL ainda não foi bloqueado em teste. |
 | A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias e ativos/histórico preenchidos. |
 | A15 | Verificado por smoke | `alerts-smoke.mjs` injeta INMET 503, confirma retry e navega ao Radar estadual com os demais endpoints funcionais. |
 | A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
 | A17 | Verificado em unidade + smoke | Expiração muda de ativo para histórico com relógio do navegador avançado, sem novo fetch. |
-| A18 | Parcial | Helpers e contrato cobrem UTC; falta verificar visualmente a virada do dia na interface de alertas. |
+| A18 | Verificado por smoke | `alerts-smoke.mjs` força timezone local de São Paulo e confirma o dia e hora UTC do CAP na virada local de dia. |
 | A19 | Parcial | `/alerts` mostra aviso stale específico do INMET no smoke; outras seções ainda não têm falha-com-cache verificada via browser. |
-| A20 | Parcial | `alerts-smoke.mjs` confirma que mudar UF limpa os avisos da UF anterior; falta simular duas respostas simultâneas fora de ordem. |
-| A21 | Parcial | Contratos e rota cobrem vazios/erros; falta smoke da interface Help distinguindo os dois estados. |
-| A22 | Aberto | Sem smoke de campanhas vazias na interface. |
-| A23 | Aberto | Distância de referência durante pan/zoom requer inspeção manual. |
+| A20 | Verificado por smoke | `alerts-smoke.mjs` confirma que uma resposta antiga, liberada depois da UF atual, não substitui os dados da UF selecionada. |
+| A21 | Verificado por smoke | `help-smoke.mjs` distingue serviço indisponível (alerta/retry) de resultado vazio (mensagem vazia sem erro). |
+| A22 | Verificado por smoke | `help-smoke.mjs` dá resposta vazia de campanhas e confirma que a interface não inventa motivo. |
+| A23 | Verificado por smoke | `help-smoke.mjs` arrasta o mapa e confirma que a distância/reference permanece estável sem nova consulta. |
 | A24 | Parcial | `/alerts` smoke usa teclado, expansão de texto e viewport 320 px; demais larguras e leitor de tela não foram inspecionados. |
 
 O smoke territorial passou após restringir o seletor à navegação “Seções do estado”; o seletor anterior se tornou ambíguo com o link global “Alertas”.

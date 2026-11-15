@@ -4,7 +4,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright")
 
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, timezoneId: "America/Sao_Paulo" });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const regions = [
@@ -13,7 +13,7 @@ try {
   ];
   const active = {
     id: "a1", sent: "2026-11-15T10:00:00.000Z", event: "Chuva", severity: "severe", color: "#ff0000",
-    onset: "2026-11-15T12:00:00.000Z", expires: "2026-11-15T12:01:00.000Z", headline: "Alerta ativo de chuva",
+    onset: "2026-11-15T02:30:00.000Z", expires: "2026-11-15T12:01:00.000Z", headline: "Alerta ativo de chuva",
     description: "Descrição oficial.", instruction: "Procure abrigo.", url: "https://avisos.inmet.gov.br/a1",
     municipalities: [{ code: "4314902", name: "Porto Alegre" }], municipalityCountTotal: 1, geometry: null, status: "active",
   };
@@ -48,6 +48,9 @@ try {
   await page.getByRole("heading", { name: "Alertas meteorológicos" }).waitFor();
   await page.getByText("Alerta ativo de chuva").waitFor();
   await page.getByText("Alerta encerrado de vento").waitFor();
+  const onset = page.locator('time[datetime="2026-11-15T02:30:00.000Z"]').first();
+  await onset.waitFor();
+  assert.match(await onset.innerText(), /15\/11\/2026, 02:30 UTC/, "CAP timestamps must stay on the UTC date across the local midnight");
   await page.getByText("Detalhes e orientações").first().focus();
   await page.keyboard.press("Enter");
   await page.getByText("Descrição oficial.").first().waitFor();
@@ -105,7 +108,51 @@ try {
   await radar.waitForURL((url) => url.pathname === "/region/rs" && url.searchParams.get("tab") === "radar");
   await radar.getByRole("heading", { name: "Rio Grande do Sul" }).waitFor();
   await radar.close();
-  console.log("PASS: keyboard navigation, active/history/empty/stale states, details, local expiry, retry isolation, state filter and 320px layout");
+
+  const race = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  let requestRsStarted;
+  let releaseRs;
+  let rsResponseAttempted;
+  let rsResponseDelivered = false;
+  const rsStarted = new Promise((resolve) => { requestRsStarted = resolve; });
+  const rsGate = new Promise((resolve) => { releaseRs = resolve; });
+  const rsAttempted = new Promise((resolve) => { rsResponseAttempted = resolve; });
+  await race.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url());
+    if (!url.pathname.startsWith("/api/")) return route.continue();
+    if (url.pathname === "/api/regions") return route.fulfill({ json: { regions } });
+    if (url.pathname === "/api/regions/rs/alerts") {
+      requestRsStarted();
+      await rsGate;
+      try {
+        await route.fulfill({ json: {
+          dataSource: "cache", region: regions[0], updatedAt: "2026-11-15T12:00:00.000Z",
+          summary: { active: 1, highestSeverity: "severe" }, alerts: [{ ...active, headline: "Resposta atrasada de RS" }],
+        } });
+        rsResponseDelivered = true;
+      } catch { /* Query cancellation can abort the obsolete request before the delayed response is delivered. */ }
+      finally { rsResponseAttempted(); }
+      return;
+    }
+    if (url.pathname === "/api/regions/sc/alerts") return route.fulfill({ json: {
+      dataSource: "cache", region: regions[1], updatedAt: "2026-11-15T12:00:00.000Z",
+      summary: { active: 0, highestSeverity: null }, alerts: [],
+    } });
+    return route.fulfill({ status: 503, json: { error: { code: "upstream_unavailable", message: "fixture" } } });
+  });
+  await race.goto("http://localhost:5173/alerts?region=rs");
+  await rsStarted;
+  await race.getByLabel("Filtrar alertas por estado").selectOption("sc");
+  await race.waitForURL("**/alerts?region=sc");
+  await race.getByText("Nenhum alerta ativo foi retornado para Santa Catarina.").waitFor();
+  releaseRs();
+  await rsAttempted;
+  assert.equal(rsResponseDelivered, true, "The delayed RS response must be released after the SC response");
+  await race.waitForTimeout(250);
+  assert.equal(await race.getByText("Resposta atrasada de RS").count(), 0, "A late response from the previous state must not replace current data");
+  assert.equal(await race.getByRole("combobox", { name: "Filtrar alertas por estado" }).inputValue(), "sc");
+  await race.close();
+  console.log("PASS: keyboard navigation, active/history/empty/stale states, UTC, expiry, retries, state races and 320px layout");
 } finally {
   await browser.close();
 }
