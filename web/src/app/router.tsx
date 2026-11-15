@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { ComparePage } from "../features/compare/ComparePage";
 import { OverviewPage } from "../features/overview/OverviewPage";
-import { RegionPage } from "../features/region/RegionPage";
+import { StatePage } from "../features/region/StatePage";
 import { StoryPage } from "../features/story/StoryPage";
 import { Layout } from "./Layout";
 import { NotFoundPage } from "./NotFoundPage";
@@ -15,7 +15,7 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <OverviewPage /> },
-      { path: "region/:regionId", element: <RegionPage /> },
+      { path: "region/:regionId", element: <StatePage /> },
       { path: "story/:storyId", element: <StoryPage /> },
       { path: "compare", element: <ComparePage /> },
       { path: "*", element: <NotFoundPage /> },

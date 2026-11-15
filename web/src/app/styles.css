@@ -147,3 +147,11 @@
 .maplibregl-ctrl-attrib a {
   color: var(--color-ink-2);
 }
+
+.state-shell { padding: 1rem; max-width: 72rem; margin: auto; }
+.state-shell nav { display: flex; overflow-x: auto; gap: 1rem; padding: 1rem 0; }
+.state-shell nav a { padding: .5rem; }
+.state-shell [aria-current="page"] { font-weight: bold; border-bottom: 3px solid currentColor; }
+.state-shell :focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+.state-shell section { border-top: 1px solid #aaa; padding: 1rem 0; }
+.state-shell button, .state-shell select { padding: .5rem; border: 1px solid currentColor; }
