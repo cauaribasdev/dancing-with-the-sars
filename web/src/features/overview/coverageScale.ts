@@ -11,7 +11,7 @@ export interface CoverageClass {
 }
 
 /** No pass in the period: no fill, dashed outline only. */
-export const NO_COVERAGE_LABEL = "none";
+export const NO_COVERAGE_LABEL = "nenhum";
 
 /** Same values as --color-cov-1..6 in app/styles.css (checked with the dataviz skill's validator). */
 export const COVERAGE_CLASSES: readonly CoverageClass[] = [
@@ -34,12 +34,12 @@ export function coverageColor(days: number | null | undefined): string | null {
   return i < 0 ? null : COVERAGE_CLASSES[i].color;
 }
 
-/** Accessible class text, e.g. "6 to 9 days with a pass". */
+/** Accessible class text, e.g. "6 a 9 dias com passagem". */
 export function coverageClassLabel(days: number | null | undefined): string {
   const i = coverageClassIndex(days);
-  if (i < 0) return "no days with a pass";
+  if (i < 0) return "nenhum dia com passagem";
   const c = COVERAGE_CLASSES[i];
-  return Number.isFinite(c.max) ? `${c.min} to ${c.max} days with a pass` : `${c.min} or more days with a pass`;
+  return Number.isFinite(c.max) ? `${c.min} a ${c.max} dias com passagem` : `${c.min} ou mais dias com passagem`;
 }
 
 /**

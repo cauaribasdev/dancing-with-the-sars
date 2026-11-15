@@ -47,7 +47,7 @@ export async function apiGet<T>(path: string, params?: QueryParams, signal?: Abo
     res = await fetch(buildUrl(path, params), { signal, headers: { Accept: "application/json" } });
   } catch (err) {
     if (signal?.aborted) throw err;
-    throw new ApiError("network", "Could not reach the server. Check that the API is running.", 0);
+    throw new ApiError("network", "Não foi possível acessar o servidor. Verifique se a API está em execução.", 0);
   }
 
   let body: unknown = null;
@@ -73,19 +73,25 @@ export function describeError(err: unknown): string {
       case "network":
         return err.message;
       case "window_too_large":
-        return "The chosen period is too long for this area. Pick a shorter period.";
+        return "O período escolhido é longo demais para esta área. Escolha um período menor.";
       case "region_not_found":
-        return "This region does not exist. Pick another one from the list.";
+        return "Esta região não existe. Escolha outra na lista.";
       case "pass_not_found":
-        return "This pass is not in the NASA catalog.";
+        return "Esta passagem não consta no catálogo da NASA.";
       case "story_not_found":
-        return "This story does not exist.";
+        return "Esta história não existe.";
       case "invalid_query":
-        return "The address has invalid parameters.";
+        return "O endereço contém parâmetros inválidos.";
+      case "state_only":
+        return "Esta informação está disponível apenas para estados.";
+      case "unsupported_area":
+        return "A área selecionada não está disponível no snapshot atual do IPEA.";
+      case "upstream_unavailable":
+        return "A fonte externa está indisponível no momento.";
       default:
-        if (err.status >= 500 || err.status === 0) return "The NASA catalog did not answer. Try again in a moment.";
-        return err.message;
+        if (err.status >= 500 || err.status === 0) return "A fonte de dados não respondeu. Tente novamente em instantes.";
+        return "Não foi possível consultar esta fonte. Verifique os parâmetros e tente novamente.";
     }
   }
-  return "Something went wrong while loading the data.";
+  return "Ocorreu um erro ao carregar os dados.";
 }

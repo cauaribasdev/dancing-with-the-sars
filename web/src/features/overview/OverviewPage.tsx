@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router";
-import { describeError } from "../../api/client";
+import { apiGet, describeError } from "../../api/client";
 import { clampMonth, listMonths, monthRange } from "../../api/dates";
 import { useCoverage, useRegions, useRegionsGeoJSON, useStories, useStory } from "../../api/hooks";
 import { ErrorMessage, StaleNotice } from "../../ui/feedback";
@@ -29,6 +30,25 @@ export function OverviewPage() {
   const regions = useRegions("state");
   const geo = useRegionsGeoJSON("state");
   const coverage = useCoverage(period);
+  const alerts = useQuery({
+    queryKey: ["alerts", "br", "active"],
+    queryFn: ({ signal }) => apiGet<{ alerts: { municipalities: { code: string | number }[]; status: string }[] }>("/regions/br/alerts", undefined, signal),
+    retry: false,
+    staleTime: 300_000,
+    refetchInterval: 300_000,
+  });
+  const alertCounts = useMemo(() => {
+    const codes = regions.data ?? [];
+    const counts: Record<string, number> = {};
+    for (const alert of alerts.data?.alerts ?? []) {
+      if (alert.status !== "active") continue;
+      const states = new Set(alert.municipalities.map((m) => String(m.code).padStart(7, "0").slice(0, 2)));
+      for (const state of codes) {
+        if (state.ibgeCode && states.has(String(state.ibgeCode).padStart(2, "0"))) counts[state.id] = (counts[state.id] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [alerts.data, regions.data]);
   const stories = useStories();
   const story = stories.data?.[0];
   // Prefetch the featured story: it gives the marker position and makes the story page instant.
@@ -97,6 +117,7 @@ export function OverviewPage() {
           month={month}
           regions={regions.data ?? []}
           selectedId={selectedId}
+          alertCounts={alertCounts}
           onSelect={(region) => update({ region })}
           story={story}
           storyPlace={storyDetail.data?.places[0]}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { apiGet, describeError } from '../../api/client';
 import { useRegions, useRegionPasses, useRegionPairs, useRegionsGeoJSON } from '../../api/hooks';
 import { NotFoundPage } from '../../app/NotFoundPage';
@@ -53,9 +53,11 @@ function RadarSummary({id,window}: {id:string;window:{start:string;end:string}})
  <details className="sidebar-disclosure"><summary>Informações complementares: alertas e organizações</summary><SourcePanel id={id} feature="alerts" window={window}/><SourcePanel id={id} feature="help" window={window}/></details></>;
 }
 interface Feed {
- dataSource?: string;
- alerts?: {id:string;headline:string;description:string;instruction:string;expires:string;onset:string;severity:string}[];
- organizations?: {id:number;name:string;distanceKm:number;url:string}[];
+ dataSource?: 'live'|'cache'|'stale';
+ snapshotDate?: string|null;
+ nextCursor?: string|null;
+ alerts?: {id:string;headline:string;description:string;instruction:string;expires:string;onset:string;severity:string;status:'active'|'expired'}[];
+ organizations?: {id:string|number;name:string;areas:string[];distanceKm:number;url?:string|null;municipality:{code:string|number;name:string}}[];
  total?:number;
  posts?: {id:string;title:string;text:string;date:string;link:{page:string;regionId?:string;day?:string;before?:string;after?:string;storyId?:string}}[];
 }
@@ -64,10 +66,22 @@ function SourcePanel({id,feature,window}: {id:string;feature:string;window:{star
  const [now,setNow]=useState(Date.now());
  useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),1000);return ()=>clearInterval(timer);},[]);
  const demo=import.meta.env.DEV && import.meta.env.VITE_DEMO_FEEDS==='true';
- const q=useQuery({queryKey:[endpoint,id,window.start,window.end,demo],queryFn:({signal})=>demo?Promise.resolve(demoFeed(endpoint,id) as Feed):apiGet<Feed>(`/regions/${id}/${endpoint}`,endpoint==='alerts'?{include:'recent'}:endpoint==='posts'?window:{areas:'5,1,2,12',limit:20},signal),retry:false,staleTime: endpoint==='alerts'?300000:3600000,refetchInterval:endpoint==='alerts'?300000:false});
- return <section>{demo && <p role="status">Demonstração: dados sintéticos, não são dados reais.</p>}<h2>{feature==='help'?'Help':feature==='alerts'?'Alerts':'Posts'}</h2>{q.isPending && <p role="status">Carregando…</p>}{q.error && <p role="alert">Não foi possível verificar esta fonte. {describeError(q.error)} <button onClick={()=>q.refetch()}>Tentar novamente</button></p>}{q.data?.dataSource==='stale' && <p>Dados desatualizados. <button onClick={()=>q.refetch()}>Atualizar</button></p>}
- {q.data && <>{endpoint==='alerts' && (q.data.alerts?.length ? q.data.alerts.map(a=><details key={a.id}><summary>{a.headline} — {Date.parse(a.expires)<=now?'Vencido':a.severity}</summary><p>{a.description}</p><p>{a.instruction}</p><p>{a.onset} — {a.expires} (UTC)</p><p>A expiração local não verifica a chegada de novos avisos.</p></details>):<p>Nenhum alerta retornado pela fonte.</p>)}
- {endpoint==='organizations' && <><p>{q.data.total??0} organizações. Listagem não implica endosso ou disponibilidade.</p>{q.data.organizations?.map(o=><p key={o.id}><a href={o.url}>{o.name}</a> · {o.distanceKm.toFixed(1)} km</p>)}{!q.data.organizations?.length && <p>Nenhuma organização encontrada.</p>}</>}
- {endpoint==='posts' && (q.data.posts?.length?q.data.posts.map(p=>{const l=p.link;const href=l.page==='region'&&l.regionId?`${paths.region(l.regionId)}?tab=radar&day=${encodeURIComponent(l.day??'')}`:l.page==='compare'&&l.before&&l.after?paths.compare(l.before,l.after):l.page==='story'&&l.storyId?paths.story(l.storyId):null;return <article key={p.id}><h3>{href?<Link to={href}>{p.title}</Link>:p.title}</h3><p>{p.date} UTC · {p.text}</p></article>;}):<p>Nenhuma publicação encontrada.</p>)}</>}
+ const q=useInfiniteQuery({
+  queryKey:[endpoint,id,window.start,window.end,endpoint==='organizations'?'5,2':endpoint==='alerts'?'recent':'all',demo],
+  initialPageParam:null as string|null,
+  queryFn:({signal,pageParam})=>demo?Promise.resolve(demoFeed(endpoint,id) as Feed):apiGet<Feed>(`/regions/${id}/${endpoint}`,endpoint==='alerts'?{include:'recent'}:endpoint==='posts'?{...window,cursor:pageParam??undefined,limit:20}:{areas:'5,2',cursor:pageParam??undefined,limit:20},signal),
+  getNextPageParam:(last)=>endpoint==='alerts'?undefined:last.nextCursor??undefined,
+  retry:false,staleTime:endpoint==='alerts'?300_000:endpoint==='organizations'?86_400_000:3_600_000,
+  refetchInterval:endpoint==='alerts'?300_000:false,
+ });
+ const feed=q.data?.pages.at(-1);
+ const alerts=q.data?.pages.flatMap(page=>page.alerts??[])??[];
+ const organizations=q.data?.pages.flatMap(page=>page.organizations??[])??[];
+ const posts=q.data?.pages.flatMap(page=>page.posts??[])??[];
+ return <section>{demo && <p role="status">Demonstração: dados sintéticos, não são dados reais.</p>}<h2>{feature==='help'?'Como ajudar':feature==='alerts'?'Alertas':'Publicações'}</h2>{q.isPending && <p role="status">Carregando…</p>}{q.error && <p role="alert">Não foi possível consultar esta fonte. {describeError(q.error)} <button onClick={()=>q.refetch()}>Tentar novamente</button></p>}{q.data?.pages.some(page=>page.dataSource==='stale') && <p>Dados desatualizados. <button onClick={()=>q.refetch()}>Atualizar</button></p>}
+ {q.data && <>{endpoint==='alerts' && (alerts.length ? alerts.map(a=><details key={a.id}><summary>{a.headline} — {a.status==='expired'||Date.parse(a.expires)<=now?'Encerrado':a.severity}</summary><p>{a.description}</p><p>{a.instruction}</p><p>{a.onset} — {a.expires} (UTC)</p><p>A expiração local não confirma a chegada de novos avisos.</p></details>):<p>Nenhum alerta retornado pela fonte.</p>)}
+ {endpoint==='organizations' && <><p>{feed?.total??0} organizações do Mapa das OSCs (IPEA). Listagem não implica endosso ou disponibilidade.{feed?.snapshotDate?` Snapshot de ${feed.snapshotDate}.`:''}</p>{organizations.map(o=><p key={o.id}>{o.url?<a href={o.url} target="_blank" rel="noreferrer">{o.name}</a>:o.name} · {o.municipality.name} · {o.distanceKm.toFixed(1)} km</p>)}{!organizations.length && <p>Nenhuma organização encontrada para as áreas disponíveis (assistência social e saúde).</p>}</>}
+ {endpoint==='posts' && (posts.length?posts.map(p=>{const l=p.link;const href=l.page==='region'&&l.regionId?`${paths.region(l.regionId)}?tab=radar&day=${encodeURIComponent(l.day??'')}`:l.page==='compare'&&l.before&&l.after?paths.compare(l.before,l.after):l.page==='story'&&l.storyId?paths.story(l.storyId):null;return <article key={p.id}><h3>{href?<Link to={href}>{p.title}</Link>:p.title}</h3><p>{p.date} UTC · {p.text}</p></article>;}):<p>Nenhuma publicação encontrada.</p>)}</>}
+ {q.hasNextPage && <button onClick={()=>q.fetchNextPage()} disabled={q.isFetchingNextPage}>{q.isFetchingNextPage?'Carregando…':'Carregar mais'}</button>}
  </section>;
 }

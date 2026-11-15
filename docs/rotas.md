@@ -3,9 +3,9 @@
 As rotas do site, da nossa API e das fontes externas. É o complemento de [produto.md](produto.md).
 
 Situação de cada rota:
-- **existe:** está no branch `dev` e foi chamada hoje com o servidor rodando.
-- **nova:** é proposta. Os formatos abaixo definem o que cada resposta traz.
-- **externa testada:** foi chamada pela equipe em 14/11/2026.
+- **implementada:** incluída no código deste branch; rotas novas têm testes de API.
+- **proposta:** contrato documentado, ainda sem implementação no servidor.
+- **externa testada:** fonte pública verificada pela equipe em 15/11/2026.
 
 As rotas novas seguem as regras do CLAUDE.md:
 - nomes e textos em inglês;
@@ -19,7 +19,7 @@ As rotas novas seguem as regras do CLAUDE.md:
 
 | Caminho | Tela | Situação |
 |---|---|---|
-| `/?month=YYYY-MM&region=<estado>` | Mapa do Brasil, estados pintados por dias com passagem | existe; o seletor passa a listar só estados e o mapa ganha o selo de alerta ativo |
+| `/?month=YYYY-MM&region=<estado>` | Mapa do Brasil, estados pintados por dias com passagem | existe; seletor estadual e selos de alertas ativos |
 | `/region/:regionId?tab=<aba>&start&end&day&pass` | Painel do estado | existe como página do radar; passa a aceitar só estados e ganha as abas |
 | `/story/:storyId` | História (hoje `rs-flood-jul-2026`) | existe |
 | `/compare?before=<passId>&after=<passId>` | Antes e depois de duas passagens | existe |
@@ -41,6 +41,9 @@ Valores de `tab`: `overview` (padrão), `radar`, `alerts`, `posts`, `help`. Os p
 | `GET /regions/:id/passes?start&end` | Overview (números do radar), aba Radar |
 | `GET /regions/:id/footprints?start&end` | Aba Radar (contornos) |
 | `GET /regions/:id/pairs?start&end[&eventDate]` | Overview (mudança em destaque), aba Radar |
+| `GET /regions/:id/alerts?include=active\|recent` | Painel estadual e selos no mapa nacional |
+| `GET /regions/:id/organizations?areas&near&limit&cursor` | Aba Como ajudar |
+| `GET /regions/:id/posts?start&end&limit&cursor` | Aba Publicações |
 | `GET /coverage?start&end` | Mapa do Brasil |
 | `GET /passes/:id` · `GET /passes/:id/browse` | Imagens de radar, antes e depois |
 | `GET /stories` · `GET /stories/:id` | Overview (cartão da história), História |
@@ -49,7 +52,7 @@ Os parâmetros estão no README da raiz.
 - **Período:** com só estados, o limite que vale nas telas é o de estado, 366 dias.
 - **País e macrorregiões na API:** a API continua aceitando `kind=country` e `kind=region`, mas o site não usa mais esses valores.
 
-### 2.2 `GET /regions/:id/alerts` (nova)
+### 2.2 `GET /regions/:id/alerts` (implementada neste branch)
 
 Avisos do INMET que atingem o estado.
 
@@ -88,49 +91,56 @@ Avisos do INMET que atingem o estado.
 - **`severity`:** `minor`, `moderate`, `severe` ou `extreme` (o CAP em minúsculas).
 - **`status`:** `active` ou `expired`.
 - **Ordem:** ativos primeiro, do mais grave para o menos grave; dentro da mesma severidade, o que começou mais recentemente.
-- **`municipalities`:** só os municípios **do estado pedido**. `municipalityCountTotal` é o total do alerta, em todo o Brasil.
+- **`municipalities`:** só os municípios **do estado pedido**. `municipalityCountTotal` é o total do alerta, em todo o Brasil. Para `br`, a lista mantém todos os municípios.
 - **Textos do INMET:** `event`, `headline`, `description` e `instruction` vêm como o INMET publicou, em português. Não traduzir nem resumir.
 - **`geometry`:** já vem em [lon, lat]. O servidor inverte o "lat,lon" do CAP.
 - **Mapa do Brasil:** o selo de alerta vem de `GET /regions/br/alerts`. É o único uso de `br`. Nessa resposta, `municipalities` traz todos os municípios do alerta, e o selo de cada estado sai desse agrupamento.
+- Fonte: bucket CAP público do WIS2/INMET. O servidor consulta os últimos oito dias, limita downloads concorrentes, guarda snapshot no cache de disco por cinco minutos e responde `stale` quando a publicação mais recente passou de 24 horas ou quando usou cache antigo após falha. `updatedAt` é o `LastModified` mais recente.
 - **Município do estado:** os dois primeiros dígitos do código IBGE do município são o `ibgeCode` do estado.
 
-### 2.3 `GET /regions/:id/organizations` (nova)
+### 2.3 `GET /regions/:id/organizations` (implementada neste branch)
 
 Organizações da sociedade civil que apoiam pessoas em situação de vulnerabilidade no estado.
 
 | Parâmetro | Onde | Padrão | Descrição |
 |---|---|---|---|
 | `id` | caminho | — | Sigla do estado. País ou macrorregião devolve 400 |
-| `areas` | query | `5,1,2,12` | Áreas de atuação do IPEA: 5 assistência social, 1 habitação, 2 saúde, 12 comunidades e favelas |
-| `near` | query | centro do estado | `lon,lat` usado para ordenar por distância (por exemplo, o centro do par antes/depois em destaque) |
+| `areas` | query | `5,2` | Áreas verificadas no CSV corrente: 5 assistência social e 2 saúde. Habitação e comunidades/favelas não aparecem como colunas separadas no snapshot consultado |
+| `near` | query | centro da bbox do estado | `lon,lat` usado para ordenar por distância; referência explícita indicada como `pass` |
 | `limit` | query | `20` | Máximo de itens, até 100 |
+| `cursor` | query | `0` | Offset decimal para paginação estável |
 
 ```json
 {
+  "dataSource": "stale",
   "region": { "id": "rs", "name": "Rio Grande do Sul" },
-  "reference": { "lon": -51.22, "lat": -30.03, "kind": "pair" },
+  "reference": { "lon": -51.22, "lat": -30.03, "kind": "state" },
   "total": 412,
   "organizations": [
     {
-      "id": 1425406,
+      "id": "12345678000199",
       "name": "...",
       "areas": ["Assistência social"],
       "municipality": { "code": 4314902, "name": "Porto Alegre" },
       "lon": -51.21, "lat": -30.04,
-      "distanceKm": 1.8,
-      "url": "https://mapaosc.ipea.gov.br/..."
+      "distanceKm": 1.8
     }
   ],
-  "campaigns": [],
-  "notice": "Being listed is not an endorsement. Source: Mapa das OSCs (IPEA)."
+  "campaigns": null,
+  "campaignsStatus": "not_configured",
+  "snapshotDate": "2026-08-18",
+  "nextCursor": null,
+  "notice": "Fonte: Mapa das OSCs (IPEA). O snapshot pode estar desatualizado."
 }
 ```
 
-- **`reference.kind`:** `pair` quando `near` foi informado a partir de um par do radar; `state` quando a referência é o centro do estado.
-- **`campaigns`:** projetos do GlobalGiving (`{ "source", "title", "url" }`). Fica vazio se a chave `GLOBALGIVING_API_KEY` não estiver definida.
+- **`reference.kind`:** `pass` quando `near` foi informado; `state` para a referência aproximada do estado.
+- O CSV público não fornece o identificador interno da página detalhada; os itens não recebem link de perfil inferido do CNPJ.
+- O snapshot geral é baixado em fluxo, filtrado para registros ativos com coordenadas e armazenado em cache por um dia. A versão observada foi modificada em agosto de 2026 e aparece como `stale` após 45 dias.
+- Áreas 1 e 12 não são habilitadas porque as colunas correntes não representam habitação e comunidades/favelas separadamente. `campaigns` não está configurado.
 - **`total`:** quantas organizações do estado cumprem o filtro, antes do `limit`.
 
-### 2.4 `GET /regions/:id/posts` (nova, opção automática aceita em [produto.md](produto.md#4-feed-de-publicações-posts))
+### 2.4 `GET /regions/:id/posts` (implementada neste branch, opção automática aceita em [produto.md](produto.md#4-feed-de-publicações-posts))
 
 Publicações geradas a partir dos dados do radar.
 
@@ -138,6 +148,7 @@ Publicações geradas a partir dos dados do radar.
 |---|---|---|---|
 | `id` | caminho | — | Sigla do estado. País ou macrorregião devolve 400 |
 | `start` / `end` | query | últimos 30 dias | Até 366 dias, o limite de estado |
+| `limit` / `cursor` | query | `20` / `0` | limite 1–100; cursor é offset decimal determinístico |
 
 ```json
 {
@@ -174,6 +185,7 @@ Publicações geradas a partir dos dados do radar.
 
 - **`link`:** diz para qual tela a publicação leva (painel do estado, comparação ou história).
 - **Ordem:** por `date`, da mais recente para a mais antiga.
+- A rota só aceita UFs; país/macro retorna `400 state_only`. Passagens são agregadas por dia, pares usam o mesmo `stackId` e histórias são incluídas somente na UF correspondente. `dataSource` reflete o catálogo CMR.
 - **Textos:** só dizem fatos que vêm do catálogo (data, faixa, intervalo). Nada de "a água subiu" sem fonte.
 
 ## 3. Fontes externas
@@ -238,4 +250,4 @@ Base: `https://mapaosc.ipea.gov.br/api/api`. O Swagger mostra `/api/...`, mas o 
 
 ## Decisões aceitas e dependências
 
-As rotas de alerts, organizations e posts são contratos planejados e ainda não estão disponíveis. A aba Alerts solicitará `include=recent`; `active` continua sendo o padrão da API. Para links regionais legados sem tab, day ou pass abrem Radar; na ausência de ambos, Overview. Ver [frontend.md](frontend.md). Organizations precisa de metadados de snapshot, proveniência, referência de passagem e disponibilidade parcial de campanhas; posts precisa de contrato de paginação. Não exigir esses campos antes de sua disponibilidade.
+As rotas de alerts, organizations e posts estão implementadas neste branch. A aba Alerts solicitará `include=recent`; `active` continua sendo o padrão da API. Para links regionais legados sem tab, day ou pass abrem Radar; na ausência de ambos, Overview. Ver [frontend.md](frontend.md). Organizations entrega `snapshotDate`, origem, referência, paginação e status de campanhas não configuradas.

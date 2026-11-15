@@ -74,21 +74,21 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
     <div className="flex flex-col gap-4" aria-live="polite">
       <div>
         <h2 className="place text-[26px] leading-tight text-ink">{regionName(region)}</h2>
-        {parent && parent.kind === "region" ? <p className="text-[13px] text-ink-3">{regionName(parent)} region</p> : null}
-        {region.kind === "region" ? <p className="text-[13px] text-ink-3">Macro-region of Brazil</p> : null}
+        {parent && parent.kind === "region" ? <p className="text-[13px] text-ink-3">Região {regionName(parent)}</p> : null}
+        {region.kind === "region" ? <p className="text-[13px] text-ink-3">Macrorregião do Brasil</p> : null}
       </div>
 
       {pending ? (
-        <p className="text-[15px] text-ink-3">Counting passes in {monthLabel}…</p>
+        <p className="text-[15px] text-ink-3">Contando passagens em {monthLabel}…</p>
       ) : summary ? (
         <p className="text-[16px] leading-[1.5] text-ink">
           {summary.distinctDates > 0 ? (
             <>
-              In {monthLabel}, the radar passed over {name} on{" "}
-              <strong className="num font-[700]">{plural(summary.distinctDates, "day", "days")}</strong>.
+              Em {monthLabel}, o radar passou sobre {name} em{" "}
+              <strong className="num font-[700]">{plural(summary.distinctDates, "dia", "dias")}</strong>.
             </>
           ) : (
-            <>The radar did not pass over {name} in {monthLabel}.</>
+            <>O radar não passou sobre {name} em {monthLabel}.</>
           )}
         </p>
       ) : null}
@@ -98,7 +98,7 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
       {!pending && shownChildren.length ? (
         <div className="flex flex-col gap-1.5">
           <h3 className="text-[13px] font-medium text-ink-2">
-            {region.kind === "country" ? "States with the most days with a pass" : "Days with a pass, by state"}
+            {region.kind === "country" ? "Estados com mais dias observados" : "Dias com passagem, por estado"}
           </h3>
           <ul className="border-t border-rule text-[14px]">
             {shownChildren.map((s) => (
@@ -110,7 +110,7 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
                 >
                   <Swatch days={s.distinctDates} />
                   <span className="flex-1">{s.name}</span>
-                  <span className="num font-[600]">{plural(s.distinctDates, "day", "days")}</span>
+                  <span className="num font-[600]">{plural(s.distinctDates, "dia", "dias")}</span>
                 </button>
               </li>
             ))}

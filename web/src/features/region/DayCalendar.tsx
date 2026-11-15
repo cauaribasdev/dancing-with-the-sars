@@ -30,7 +30,7 @@ export function DayCalendar({ window, timeline, selectedDay, onSelectDay, disabl
         ) : null}
       </div>
       <p className="text-[13px] leading-snug text-ink-3">
-        The number is how many passes that day had. Pick a day to show only its passes.
+        O número indica quantas passagens ocorreram no dia. Selecione uma data para ver essas passagens.
       </p>
       <div className={`grid grid-cols-7 gap-1 ${disabled ? "opacity-40" : ""}`} aria-busy={disabled || undefined}>
         {WEEKDAYS.map((d) => (

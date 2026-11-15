@@ -185,7 +185,7 @@ export function RegionMap({
     <>
       {loading ? (
         <div className="absolute inset-x-0 top-0">
-          <ProgressBar label="Loading pass outlines" />
+          <ProgressBar label="Carregando contornos das passagens" />
         </div>
       ) : null}
       <div className="absolute left-3 top-3">
@@ -197,16 +197,16 @@ export function RegionMap({
             <rect x="1.5" y="1.5" width="21" height="9" rx="1" fill="none" stroke={MAP_COLORS.ink} strokeWidth="3.5" />
             <rect x="1.5" y="1.5" width="21" height="9" rx="1" fill="none" stroke={MAP_COLORS.signal} strokeWidth="1.5" />
           </svg>
-          Area seen by one pass
+          Área observada por uma passagem
         </span>
         <span className="text-ink-2">
-          {selectedPassId ? "The thick outline is the chosen pass." : "Click an outline to see its radar image."}
+          {selectedPassId ? "O contorno espesso marca a passagem selecionada." : "Clique em um contorno para ver a imagem de radar."}
         </span>
       </div>
       {chooser ? (
         <div
           role="dialog"
-          aria-label="Choose a pass"
+          aria-label="Escolher uma passagem"
           className="pointer-events-auto absolute z-10 flex max-h-[min(320px,70%)] w-[260px] flex-col rounded-[4px] bg-sheet text-[13px] shadow-[0_0_0_1px_var(--color-rule),0_6px_16px_-8px_rgb(22_32_42/0.35)]"
           style={{
             left: chooser.x + 10,
@@ -215,9 +215,9 @@ export function RegionMap({
           }}
         >
           <div className="flex items-baseline justify-between gap-2 border-b border-rule px-3 py-2">
-            <p className="font-[650]">{chooser.passes.length} passes overlap here</p>
+            <p className="font-[650]">{chooser.passes.length} passagens se sobrepõem aqui</p>
             <button type="button" onClick={() => setChooser(null)} className="link text-[12px]">
-              Close
+              Fechar
             </button>
           </div>
           <ul className="overflow-y-auto">

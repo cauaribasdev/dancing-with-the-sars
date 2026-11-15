@@ -1,0 +1,93 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dancing with the SARs API",
+    "version": "1.0.0",
+    "description": "Complementary regional feeds for official INMET alerts, IPEA civil society organizations, and posts derived from NISAR catalog records."
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/api/regions/{id}/alerts": {
+      "get": {
+        "summary": "Weather alerts for Brazil or a state",
+        "parameters": [
+          { "$ref": "#/components/parameters/AlertRegionId" },
+          { "name": "include", "in": "query", "description": "Include recently expired alerts when set to recent.", "schema": { "type": "string", "enum": ["active", "recent"], "default": "active" } }
+        ],
+        "responses": {
+          "200": { "description": "Alerts from INMET CAP feed.", "headers": { "X-Data-Source": { "$ref": "#/components/headers/DataSource" } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AlertsResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "404": { "$ref": "#/components/responses/NotFound" }, "502": { "$ref": "#/components/responses/UpstreamError" }, "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+    "/api/regions/{id}/organizations": {
+      "get": {
+        "summary": "IPEA organizations in a state",
+        "description": "The current CSV snapshot supports area 5 (social assistance) and area 2 (health). Housing (1) and communities/favelas (12) are not available as separate fields in this export. The CSV does not expose the internal profile id, so profile URLs are omitted.",
+        "parameters": [
+          { "$ref": "#/components/parameters/RegionId" },
+          { "name": "areas", "in": "query", "description": "Comma-separated supported IPEA area ids.", "schema": { "type": "string", "pattern": "^([25])(,[25])*$", "default": "5,2" } },
+          { "name": "near", "in": "query", "description": "Reference longitude,latitude used for distance ordering.", "schema": { "type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?,-?[0-9]+(\\.[0-9]+)?$" }, "example": "-51.23,-30.03" },
+          { "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Cursor" }
+        ],
+        "responses": {
+          "200": { "description": "Organizations from the IPEA snapshot.", "headers": { "X-Data-Source": { "$ref": "#/components/headers/DataSource" } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrganizationsResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "404": { "$ref": "#/components/responses/NotFound" }, "502": { "$ref": "#/components/responses/UpstreamError" }, "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+    "/api/regions/{id}/posts": {
+      "get": {
+        "summary": "Posts derived from NISAR acquisitions and stories",
+        "parameters": [
+          { "$ref": "#/components/parameters/RegionId" },
+          { "name": "start", "in": "query", "description": "Inclusive UTC date; default is 29 days before end.", "schema": { "$ref": "#/components/schemas/Date" } },
+          { "name": "end", "in": "query", "description": "Inclusive UTC date; defaults to today.", "schema": { "$ref": "#/components/schemas/Date" } },
+          { "name": "product", "in": "query", "schema": { "type": "string", "enum": ["GCOV"], "default": "GCOV" } },
+          { "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Cursor" }
+        ],
+        "responses": {
+          "200": { "description": "Automatically generated posts for the requested state and period.", "headers": { "X-Data-Source": { "$ref": "#/components/headers/DataSource" } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostsResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" }, "404": { "$ref": "#/components/responses/NotFound" }, "502": { "$ref": "#/components/responses/UpstreamError" }, "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "RegionId": { "name": "id", "in": "path", "required": true, "description": "Brazilian state id (for example rs).", "schema": { "type": "string", "pattern": "^(ac|al|ap|am|ba|ce|df|es|go|ma|mt|ms|mg|pa|pb|pr|pe|pi|rj|rn|rs|ro|rr|sc|sp|se|to)$" } },
+      "AlertRegionId": { "name": "id", "in": "path", "required": true, "description": "Brazilian state id or br for the national alert feed.", "schema": { "type": "string", "pattern": "^(br|ac|al|ap|am|ba|ce|df|es|go|ma|mt|ms|mg|pa|pb|pr|pe|pi|rj|rn|rs|ro|rr|sc|sp|se|to)$" } },
+      "Limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 } },
+      "Cursor": { "name": "cursor", "in": "query", "description": "Zero-based decimal offset.", "schema": { "type": "integer", "minimum": 0, "default": 0 } }
+    },
+    "headers": {
+      "DataSource": { "description": "Origin and freshness of the response data.", "schema": { "$ref": "#/components/schemas/DataSource" } }
+    },
+    "responses": {
+      "BadRequest": { "description": "Invalid region or query parameter.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+      "NotFound": { "description": "Unknown region.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+      "UpstreamError": { "description": "External source unavailable.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+      "InternalError": { "description": "Unexpected server error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+    },
+    "schemas": {
+      "DataSource": { "type": "string", "enum": ["live", "cache", "stale"] },
+      "Date": { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+      "Region": { "type": "object", "properties": { "id": { "type": "string" }, "kind": { "type": "string", "enum": ["country", "region", "state"] }, "code": { "type": "string" }, "name": { "type": "string" }, "ibgeCode": { "type": "integer" }, "parentId": { "type": "string" }, "bbox": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 } }, "required": ["id", "kind", "code", "name", "bbox"] },
+      "Severity": { "type": "string", "enum": ["minor", "moderate", "severe", "extreme"] },
+      "Position": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+      "Geometry": { "oneOf": [ { "type": "object", "properties": { "type": { "const": "Polygon" }, "coordinates": { "type": "array", "items": { "type": "array", "items": { "$ref": "#/components/schemas/Position" } } } }, "required": ["type", "coordinates"] }, { "type": "object", "properties": { "type": { "const": "MultiPolygon" }, "coordinates": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "$ref": "#/components/schemas/Position" } } } } }, "required": ["type", "coordinates"] }, { "type": "null" } ] },
+      "Municipality": { "type": "object", "properties": { "code": { "type": ["string", "integer"] }, "name": { "type": "string" } }, "required": ["code", "name"] },
+      "Alert": { "type": "object", "properties": { "id": { "type": "string" }, "sent": { "type": "string", "format": "date-time" }, "event": { "type": "string" }, "severity": { "$ref": "#/components/schemas/Severity" }, "color": { "type": "string" }, "onset": { "type": "string", "format": "date-time" }, "expires": { "type": "string", "format": "date-time" }, "status": { "type": "string", "enum": ["active", "expired"] }, "headline": { "type": "string" }, "description": { "type": "string" }, "instruction": { "type": "string" }, "url": { "type": "string", "format": "uri" }, "municipalities": { "type": "array", "items": { "$ref": "#/components/schemas/Municipality" } }, "municipalityCountTotal": { "type": "integer", "minimum": 0 }, "geometry": { "$ref": "#/components/schemas/Geometry" } }, "required": ["id", "sent", "event", "severity", "color", "onset", "expires", "status", "headline", "description", "instruction", "url", "municipalities", "municipalityCountTotal"] },
+      "AlertsResponse": { "type": "object", "properties": { "dataSource": { "$ref": "#/components/schemas/DataSource" }, "region": { "$ref": "#/components/schemas/Region" }, "updatedAt": { "type": "string", "format": "date-time" }, "summary": { "type": "object", "properties": { "active": { "type": "integer", "minimum": 0 }, "highestSeverity": { "oneOf": [{ "$ref": "#/components/schemas/Severity" }, { "type": "null" }] } }, "required": ["active", "highestSeverity"] }, "alerts": { "type": "array", "items": { "$ref": "#/components/schemas/Alert" } } }, "required": ["dataSource", "region", "updatedAt", "summary", "alerts"] },
+      "Reference": { "type": "object", "properties": { "lon": { "type": "number", "minimum": -180, "maximum": 180 }, "lat": { "type": "number", "minimum": -90, "maximum": 90 }, "kind": { "type": "string", "enum": ["pass", "state"] } }, "required": ["lon", "lat", "kind"] },
+      "Organization": { "type": "object", "properties": { "id": { "type": ["string", "integer"] }, "name": { "type": "string" }, "areas": { "type": "array", "items": { "type": "string" } }, "municipality": { "$ref": "#/components/schemas/Municipality" }, "lon": { "type": "number", "minimum": -180, "maximum": 180 }, "lat": { "type": "number", "minimum": -90, "maximum": 90 }, "distanceKm": { "type": "number", "minimum": 0 }, "url": { "type": ["string", "null"], "format": "uri" } }, "required": ["id", "name", "areas", "municipality", "lon", "lat", "distanceKm"] },
+      "CampaignStatus": { "type": "string", "enum": ["available", "empty", "not_configured", "unavailable"] },
+      "Campaign": { "type": "object", "properties": { "source": { "type": "string" }, "title": { "type": "string" }, "url": { "type": "string", "format": "uri" } }, "required": ["source", "title", "url"] },
+      "OrganizationsResponse": { "type": "object", "properties": { "dataSource": { "$ref": "#/components/schemas/DataSource" }, "region": { "$ref": "#/components/schemas/Region" }, "reference": { "oneOf": [{ "$ref": "#/components/schemas/Reference" }, { "type": "null" }] }, "total": { "type": "integer", "minimum": 0 }, "organizations": { "type": "array", "items": { "$ref": "#/components/schemas/Organization" } }, "campaigns": { "oneOf": [{ "type": "array", "items": { "$ref": "#/components/schemas/Campaign" } }, { "type": "null" }] }, "campaignsStatus": { "oneOf": [{ "$ref": "#/components/schemas/CampaignStatus" }, { "type": "null" }] }, "snapshotDate": { "oneOf": [{ "$ref": "#/components/schemas/Date" }, { "type": "null" }] }, "nextCursor": { "type": ["string", "null"] }, "notice": { "type": "string" } }, "required": ["dataSource", "region", "reference", "total", "organizations", "campaigns", "campaignsStatus", "snapshotDate", "nextCursor", "notice"] },
+      "PostLink": { "oneOf": [ { "type": "object", "properties": { "page": { "const": "region" }, "regionId": { "type": "string" }, "tab": { "type": "string", "enum": ["overview", "radar", "alerts", "posts", "help"] }, "day": { "$ref": "#/components/schemas/Date" } }, "required": ["page", "regionId"] }, { "type": "object", "properties": { "page": { "const": "compare" }, "before": { "type": "string" }, "after": { "type": "string" } }, "required": ["page", "before", "after"] }, { "type": "object", "properties": { "page": { "const": "story" }, "storyId": { "type": "string" } }, "required": ["page", "storyId"] } ] },
+      "Post": { "type": "object", "properties": { "id": { "type": "string" }, "kind": { "type": "string", "enum": ["pass", "pair", "story"] }, "date": { "$ref": "#/components/schemas/Date" }, "title": { "type": "string" }, "text": { "type": "string" }, "link": { "$ref": "#/components/schemas/PostLink" } }, "required": ["id", "kind", "date", "title", "text", "link"] },
+      "PostsResponse": { "type": "object", "properties": { "dataSource": { "$ref": "#/components/schemas/DataSource" }, "region": { "$ref": "#/components/schemas/Region" }, "query": { "type": "object", "properties": { "start": { "$ref": "#/components/schemas/Date" }, "end": { "$ref": "#/components/schemas/Date" }, "product": { "type": "string", "enum": ["GCOV"] }, "limit": { "type": "integer", "minimum": 1, "maximum": 100 } }, "required": ["start", "end", "product", "limit"] }, "posts": { "type": "array", "items": { "$ref": "#/components/schemas/Post" } }, "total": { "type": "integer", "minimum": 0 }, "nextCursor": { "type": ["string", "null"] } }, "required": ["dataSource", "region", "query", "posts", "total", "nextCursor"] },
+      "ErrorResponse": { "type": "object", "properties": { "error": { "type": "object", "properties": { "code": { "type": "string" }, "message": { "type": "string" } }, "required": ["code", "message"] } }, "required": ["error"] }
+    }
+  }
+}

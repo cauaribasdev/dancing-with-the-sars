@@ -43,7 +43,7 @@ export function StaleNotice({ dataSource, className }: { dataSource: DataSource 
       className={`flex gap-2 rounded-[3px] bg-caution-wash px-3 py-2 text-[13px] leading-snug text-caution ${className ?? ""}`}
     >
       <CautionIcon />
-      <span>NASA's catalog did not answer just now. These numbers are the last saved copy and may be out of date.</span>
+      <span>O catálogo da NASA não respondeu agora. Estes dados são a última cópia salva e podem estar desatualizados.</span>
     </p>
   );
 }
@@ -58,7 +58,7 @@ export function ErrorMessage({ children, onRetry, className }: { children: React
       </p>
       {onRetry ? (
         <button type="button" onClick={onRetry} className="link text-[14px]">
-          Try again
+          Tentar novamente
         </button>
       ) : null}
     </div>

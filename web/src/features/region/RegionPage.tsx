@@ -30,18 +30,18 @@ const FIRST_PASS_OVER_BRAZIL = "2025-10-30";
 const NO_PASSES: Pass[] = [];
 
 function kindLabel(region: Region, regions: Region[]): string | null {
-  if (region.kind === "region") return "Macro-region of Brazil";
+  if (region.kind === "region") return "Macrorregião do Brasil";
   if (region.kind === "state") {
     const parent = regions.find((r) => r.id === region.parentId);
-    return parent ? `State in the ${regionName(parent)} region` : "State of Brazil";
+    return parent ? `Estado da região ${regionName(parent)}` : "Estado do Brasil";
   }
   return null;
 }
 
 function periodPhrase(month: MonthKey | null, window: DateWindow, isDefault: boolean): string {
-  if (month) return `In ${formatMonth(month)}`;
-  if (isDefault) return `In the last 30 days (${formatDayRange(window.start, window.end)})`;
-  return `From ${formatDateLong(window.start)} to ${formatDateLong(window.end)}`;
+  if (month) return `Em ${formatMonth(month)}`;
+  if (isDefault) return `Nos últimos 30 dias (${formatDayRange(window.start, window.end)})`;
+  return `De ${formatDateLong(window.start)} a ${formatDateLong(window.end)}`;
 }
 
 export function RegionPage() {
@@ -157,7 +157,7 @@ export function RegionPage() {
         <MonthPicker
           months={months}
           value={period.month}
-          customLabel={period.kind === "default" ? "Last 30 days" : formatDayRange(window.start, window.end)}
+          customLabel={period.kind === "default" ? "Últimos 30 dias" : formatDayRange(window.start, window.end)}
           period={window}
           onChange={changeMonth}
           loading={passes.isFetching && (!data || pending)}
@@ -166,13 +166,13 @@ export function RegionPage() {
         <StaleNotice dataSource={data?.dataSource} />
         {error ? <PeriodError error={error} region={region} onRetry={() => (passes.isError ? passes.refetch() : footprints.refetch())} /> : null}
         {!data && !error && region?.kind === "country" ? (
-          <p className="text-[13px] leading-snug text-ink-3">All of Brazil has about a thousand passes a month, so the map has a lot to draw.</p>
+          <p className="text-[13px] leading-snug text-ink-3">O Brasil tem cerca de mil passagens por mês, então o mapa precisa desenhar muitos contornos.</p>
         ) : null}
         {summary && region ? (
           summary.acquisitions > 0 ? (
             <p className="text-[15px] leading-[1.55] text-ink">
-              {periodPhrase(period.month, window, period.kind === "default")}, the radar passed over {regionNameInSentence(region)} on{" "}
-              {plural(summary.distinctDates, "day", "days")}, with {plural(summary.acquisitions, "pass", "passes")} in all.
+              {periodPhrase(period.month, window, period.kind === "default")}, o radar passou sobre {regionNameInSentence(region)} em{" "}
+              {plural(summary.distinctDates, "dia", "dias")}, com {plural(summary.acquisitions, "passagem", "passagens")} ao todo.
             </p>
           ) : (
             <EmptyPeriod region={region} regions={regions.data ?? []} window={window} month={period.month} onMonth={changeMonth} months={months} />
@@ -202,7 +202,7 @@ export function RegionPage() {
         </Link>
         <PageTitle>{name}</PageTitle>
         {region ? <p className="text-[13px] text-ink-3">{kindLabel(region, regions.data ?? [])}</p> : null}
-        {regions.data && !region ? <p className="text-ink-2">This region does not exist. Go back to the map and pick one.</p> : null}
+        {regions.data && !region ? <p className="text-ink-2">Esta região não existe. Volte ao mapa e escolha outra.</p> : null}
       </header>
       <section className="daily-controls" aria-label="Composição de imagens">
         <h2>Imagens de múltiplas datas</h2>
@@ -226,7 +226,7 @@ export function RegionPage() {
 
   return (
     <MapPageLayout
-      panelLabel="Region"
+      panelLabel="Radar estadual"
       panel={panel}
       map={
         <RegionMap
@@ -259,7 +259,7 @@ function PeriodError({ error, region, onRetry }: { error: unknown; region: Regio
       </ErrorMessage>
       {tooLong && region ? (
         <Link to={paths.region(region.id)} className="link self-start text-[14px]">
-          See the last 30 days instead
+          Ver os últimos 30 dias
         </Link>
       ) : null}
     </div>
@@ -290,22 +290,22 @@ function EmptyPeriod({
   return (
     <div className="flex flex-col gap-2 text-[15px] leading-[1.55]">
       <p className="text-ink">
-        {periodPhrase(month, window, false)}, the radar did not pass over {regionNameInSentence(region)}.
+        {periodPhrase(month, window, false)}, o radar não passou sobre {regionNameInSentence(region)}.
       </p>
       {beforeData ? (
-        <p className="text-ink-2">NISAR data over Brazil starts on {formatDateLong(FIRST_PASS_OVER_BRAZIL)}. Pick a later month.</p>
+        <p className="text-ink-2">Os dados do NISAR sobre o Brasil começam em {formatDateLong(FIRST_PASS_OVER_BRAZIL)}. Escolha um mês posterior.</p>
       ) : (
         <p className="text-ink-2">
-          Try {other ? (
+          Tente {other ? (
             <button type="button" className="link" onClick={() => onMonth(other)}>
               {formatMonth(other)}
             </button>
           ) : (
-            "another month"
+            "outro mês"
           )}
           {canWiden ? (
             <>
-              {" "}or a larger area,{" "}
+              {" "}ou uma área maior,{" "}
               <Link to={paths.region(parent.id, window)} className="link">
                 {regionNameInSentence(parent)}
               </Link>

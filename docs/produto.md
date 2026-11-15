@@ -57,13 +57,13 @@ O painel é montado no navegador com dados que já existem ou que as rotas novas
 | Radar no período | Dias com passagem, total de passagens, última passagem, intervalo típico | `GET /regions/:id/passes` (já existe) |
 | Mudança em destaque | O par antes/depois mais recente do estado, com miniatura e link para comparar | `GET /regions/:id/pairs` (já existe) |
 | Alertas agora | Quantos alertas ativos e o mais grave, com a cor oficial do INMET | `GET /regions/:id/alerts` (nova) |
-| Onde buscar ajuda | Quantas organizações do estado atuam em assistência social, habitação, saúde e comunidades, e as 3 mais próximas | `GET /regions/:id/organizations` (nova) |
+| Onde buscar ajuda | OSCs ativas em áreas verificadas no snapshot público do IPEA, ordenadas pela distância | `GET /regions/:id/organizations` (implementada; no snapshot atual, assistência social e saúde) |
 | História | Se houver história do estado (hoje só RS), um cartão com link | `GET /stories` (já existe) |
 | Emergência | Defesa Civil 199 e Bombeiros 193 | Texto fixo. Os números aparecem no próprio alerta do INMET |
 
 ## 4. Feed de publicações (Posts)
 
-**Decisão aceita:** publicações geradas automaticamente pelo app a partir de passagens, pares e histórias. Conteúdo editorial com fontes é uma extensão opcional. A funcionalidade e sua rota ainda não estão implementadas. Publicações de moradores permanecem fora do escopo.
+**Decisão aceita:** publicações geradas automaticamente pelo app a partir de passagens, pares e histórias. Conteúdo editorial com fontes é uma extensão opcional. Rota implementada com filtro de período e paginação. Publicações de moradores permanecem fora do escopo.
 
 Cada publicação tem: tipo (`pass`, `pair` ou `story`), data, título, texto curto e um link para a tela certa. A ordem é da mais recente para a mais antiga.
 
@@ -91,7 +91,8 @@ Cada publicação tem: tipo (`pass`, `pair` ou `story`), data, título, texto cu
   - têm coordenadas.
 - **Atualização:** a lista é gerada uma vez a partir da base do IPEA, como os limites do IBGE, e não é consultada na hora. O app mostra uma foto da base, não o cadastro ao vivo.
 - **Ordem na tela:** as mais próximas da área com passagem ou mudança vista pelo radar vêm primeiro. Sem essa referência, a ordem é pelo centro do estado.
-- **Cada item mostra:** nome, áreas de atuação, município, distância e link para a página da OSC no IPEA (o formato desse link ainda não foi conferido).
+- **Cada item mostra:** nome, áreas de atuação verificadas no arquivo, município e distância. A exportação geral observada não traz o identificador interno da página detalhada; por isso o app não monta link de perfil a partir do CNPJ.
+- **Cobertura atual da fonte:** o CSV geral separa assistência social e saúde entre as categorias selecionadas pelo produto. Habitação e comunidades/favelas não aparecem em colunas próprias nesse snapshot e não são apresentadas como cobertas. Campanhas do GlobalGiving continuam sem configuração.
 - **Aviso fixo na tela:** "Being listed is not an endorsement. Source: Mapa das OSCs (IPEA)."
 - **GlobalGiving (opcional):** precisa de chave gratuita, guardada em variável de ambiente e usada só no servidor. Não filtra por cidade, só por país; o filtro por estado (`contactState`) e por tema de desastre seria feito no servidor. Se não houver chave, a seção simplesmente não aparece.
 
