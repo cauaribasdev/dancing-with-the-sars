@@ -112,3 +112,14 @@ Codex: design e integração multi-arquivo, preservação de contexto em links, 
 - Smoke em Chromium com API interceptada: erros 503 são fixtures intencionais de fontes indisponíveis, não falhas do teste. Sem alegação de validação ao vivo de downloads Earthdata/ASF. Inspeção visual de screenshots desktop realizada.
 
 Sem backend ou dependências novas. Sem publicação/merge deste incremento. `.gitignore` preexistente preservado.
+
+## Composição de passagens de dias diferentes — 2026-11-15
+
+Branch local `feat/radar-multiday`, sobre `feat/radar-diario-e-navegacao`.
+
+- O calendário passou a filtrar a lista sem substituir a composição. Checkboxes permitem incluir/remover passagens individuais; a ação do dia acumula suas imagens com as anteriores. Também é possível adicionar todas as passagens do período consultado, remover itens pela lista da composição e limpar tudo.
+- Seleção explícita em `images=selection` e parâmetros repetidos `image`, restaurada ao recarregar e preservada entre seções. URLs antigas `images=day` continuam aceitas e são convertidas em seleção fixa ao trocar o dia. Troca de estado/mês e período inválido limpam a composição; IDs fora da resposta do contexto atual não são carregados.
+- Mantidos: opacidade ajustável, recorte territorial, exclusão de georef inadequada, detalhes e downloads individuais. Combinações são visuais, com datas identificadas; não se promete cobertura integral do estado se o catálogo/imagens válidas deixarem lacunas. A composição abrange o período consultado; trocar o mês inicia uma nova seleção.
+- Qwen: 2 tarefas delegadas e aproveitadas (`imageSelection.ts` e checkboxes de `PassList.tsx`), sem tarefas assumidas após falhas. Codex escreveu os testes prévios, integração de estado/URL e ajustou a guarda opcional dos checkboxes durante revisão. Duas invocações reais de junior.sh; tarefas em `tasks/frontend/{multiday-selection,pass-selection-checkboxes}.md`.
+- Validação: 84 testes unitários aprovados em 12 arquivos; build TypeScript/Vite aprovado; diff check aprovado. Smoke Chromium de múltiplos dias cobre acumulação, reload, limpeza, adicionar período, checkbox individual e limpeza ao trocar estado. Smoke diário anterior também passou, incluindo detalhes/download e imagem sem georef. Fixtures do smoke são sintéticas, não cobertura real do estado. Screenshot inspecionado visualmente.
+- Sem alterações backend/dependências, sem publicação ou merge. `.gitignore` preexistente preservado.

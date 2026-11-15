@@ -13,10 +13,12 @@ interface Props {
   selectedDay: IsoDate | null;
   onSelectPass: (pass: Pass) => void;
   disabled: boolean;
+  selectedImageIds?: string[];
+  onToggleImage?: (pass: Pass) => void;
 }
 
 /** Passes of the chosen day, or of the whole period when it is small enough. */
-export function PassList({ passes, selectedDay, onSelectPass, disabled }: Props) {
+export function PassList({ passes, selectedDay, onSelectPass, disabled, selectedImageIds = [], onToggleImage }: Props) {
   const shown = useMemo(
     () => (selectedDay ? passes.filter((p) => p.date === selectedDay) : passes),
     [passes, selectedDay],
@@ -39,7 +41,14 @@ export function PassList({ passes, selectedDay, onSelectPass, disabled }: Props)
               {selectedDay ? null : <h3 className="pb-1 text-[13px] font-[600] text-ink-2">{formatDayShort(g.date)}</h3>}
               <ul className="border-t border-rule">
                 {g.passes.map((p) => (
-                  <li key={p.id} className="border-b border-rule">
+                  <li key={p.id} className="pass-select-row border-b border-rule">
+                    {onToggleImage && <input
+                      type="checkbox"
+                      checked={selectedImageIds.includes(p.id)}
+                      onChange={() => onToggleImage && onToggleImage(p)}
+                      disabled={disabled}
+                      aria-label={`Incluir imagem ${p.id}`}
+                    />}
                     <button
                       type="button"
                       disabled={disabled}

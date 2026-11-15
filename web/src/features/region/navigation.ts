@@ -20,6 +20,8 @@ export function normalizeRegionQuery(input: URLSearchParams, today: Date): {para
       warning = true;
       params.delete('day');
       params.delete('pass');
+      params.delete('image');
+      params.delete('images');
     }
     params.set('start', defaultStart);
     params.set('end', todayIso);

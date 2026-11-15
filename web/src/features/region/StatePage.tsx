@@ -34,7 +34,7 @@ function StateContent({regionId}: {regionId:string}) {
  <Link className="territory-back" to={paths.overview({region:regionId,month:window.start.slice(0,7)})}>← Mapa de {regions.data?.find(r=>r.id===regionId)?.name ?? regionId.toUpperCase()}</Link>
  <div className="state-location"><span className="panel-eyebrow">TERRITÓRIO EM ANÁLISE</span><strong>{regions.data?.find(r=>r.id===regionId)?.name ?? regionId.toUpperCase()}</strong></div>
  <details className="sidebar-disclosure"><summary>Trocar localização</summary>
- <RegionPicker regions={regions.data ?? []} value={regionId} onChange={id=>{ if(id==='br'){navigate('/');return;} const p=new URLSearchParams(canonical);p.delete('day');p.delete('pass');navigate(`/region/${id}?${p}`);}}/>
+ <RegionPicker regions={regions.data ?? []} value={regionId} onChange={id=>{ if(id==='br'){navigate('/');return;} const p=new URLSearchParams(canonical);p.delete('day');p.delete('pass');p.delete('image');p.delete('images');navigate(`/region/${id}?${p}`);}}/>
  </details>
  <p className="sidebar-hint">Período UTC<br/>{window.start} — {window.end}</p>
  {warning && <p role="status">Parâmetros inválidos. Aplicado o período padrão de 30 dias UTC.</p>}

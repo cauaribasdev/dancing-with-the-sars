@@ -18,6 +18,7 @@ import { DayCalendar } from "./DayCalendar";
 import { PassDetails } from "./PassDetails";
 import { PassList } from "./PassList";
 import { RegionMap } from "./RegionMap";
+import { mergeImageSelection } from "./imageSelection";
 import { resolvePeriod } from "./regionLogic";
 import { useStackNeighbors } from "./useStackNeighbors";
 
@@ -77,10 +78,19 @@ export function RegionPage() {
   const passParam = params.get("pass");
   const selectedPass = passParam && current ? passesById.get(passParam) : undefined;
 
-  const showDayImages = params.get("images") === "day" && !!selectedDay;
-  const dailyPassIds = showDayImages ? periodPasses.filter(p=>p.date===selectedDay).map(p=>p.id).sort() : [];
+  const allowedImageIds = periodPasses.map(p=>p.id);
+  const dayImageIds = periodPasses.filter(p=>p.date===selectedDay).map(p=>p.id);
+  const compositeMode = params.get("images") === "selection" || params.get("images") === "day";
+  const dailyPassIds = params.get("images") === "day" ? dayImageIds.slice().sort() : mergeImageSelection(params.getAll("image"), [], allowedImageIds);
+  const showDayImages = !!selectedDay && dayImageIds.length > 0 && dayImageIds.every(id=>dailyPassIds.includes(id));
   const [dailyOpacity,setDailyOpacity] = useState(0.65);
-  const image = useBrowseImage(showDayImages ? undefined : selectedPass?.id);
+  const image = useBrowseImage(compositeMode ? undefined : selectedPass?.id);
+  const updateImages = (ids: string[]) => {
+    const next = new URLSearchParams(params);
+    next.set('images','selection');next.delete('image');
+    mergeImageSelection([],ids,allowedImageIds).forEach(id=>next.append('image',id));
+    setParams(next);
+  };
   const neighbors = useStackNeighbors(regionId, selectedPass, periodPasses, window, today);
   const [focus, setFocus] = useState<{ bbox: BBox; n: number } | null>(null);
 
@@ -89,6 +99,11 @@ export function RegionPage() {
       setParams(
         (prev) => {
           const p = new URLSearchParams(prev);
+          // Legacy daily URLs become a fixed composition before changing the calendar filter.
+          if(p.get('images')==='day') {
+            p.set('images','selection');p.delete('image');
+            periodPasses.filter(pass=>pass.date===p.get('day')).forEach(pass=>p.append('image',pass.id));
+          }
           if (next.day) p.set("day", next.day);
           else p.delete("day");
           if (next.pass) p.set("pass", next.pass);
@@ -98,7 +113,7 @@ export function RegionPage() {
         { replace: true },
       );
     },
-    [setParams],
+    [setParams, periodPasses],
   );
 
   const selectPass = useCallback((p: Pass) => setSelection({ day: p.date, pass: p.id }), [setSelection]);
@@ -171,7 +186,7 @@ export function RegionPage() {
               onSelectDay={(day) => setSelection({ day, pass: null })}
               disabled={pending}
             />
-            <PassList passes={periodPasses} selectedDay={selectedDay} onSelectPass={selectPassFromList} disabled={pending} />
+            <PassList passes={periodPasses} selectedDay={selectedDay} onSelectPass={selectPassFromList} disabled={pending} selectedImageIds={dailyPassIds} onToggleImage={pass=>updateImages(dailyPassIds.includes(pass.id)?dailyPassIds.filter(id=>id!==pass.id):[...dailyPassIds,pass.id])} />
           </>
         ) : null}
       </>
@@ -188,14 +203,19 @@ export function RegionPage() {
         {region ? <p className="text-[13px] text-ink-3">{kindLabel(region, regions.data ?? [])}</p> : null}
         {regions.data && !region ? <p className="text-ink-2">This region does not exist. Go back to the map and pick one.</p> : null}
       </header>
-      <section className="daily-controls" aria-label="Imagens do dia">
-        <label><input type="checkbox" checked={showDayImages} disabled={!selectedDay || pending} onChange={e=>{
+      <section className="daily-controls" aria-label="Composição de imagens">
+        <label><input type="checkbox" checked={showDayImages} disabled={!dayImageIds.length || pending} onChange={e=>{
           const enabled=e.currentTarget.checked;
-          const next=new URLSearchParams(params);if(enabled)next.set('images','day');else next.delete('images');setParams(next);
+          updateImages(enabled ? mergeImageSelection(dailyPassIds,dayImageIds,allowedImageIds) : dailyPassIds.filter(id=>!dayImageIds.includes(id)));
           if(enabled && region)setFocus(f=>({bbox:region.bbox,n:(f?.n??0)+1}));
         }}/> Exibir todas as passagens do dia</label>
         {!selectedDay && <p>Selecione um dia no calendário para combinar suas imagens.</p>}
-        {showDayImages && <><p>{dailyPassIds.length} passagens selecionadas. Áreas sobrepostas são combinadas por transparência; não representam detecção de mudança.</p><label>Opacidade das imagens: {Math.round(dailyOpacity*100)}%<input type="range" min="0.1" max="1" step="0.05" value={dailyOpacity} onChange={e=>setDailyOpacity(Number(e.target.value))}/></label></>}
+        <p>Trocar o dia filtra a lista sem remover as imagens já escolhidas. Combine datas para ampliar a área observada; cobertura completa depende das imagens disponíveis.</p>
+        <button type="button" disabled={pending || !periodPasses.length} onClick={()=>{updateImages(allowedImageIds);if(region)setFocus(f=>({bbox:region.bbox,n:(f?.n??0)+1}));}}>Adicionar todas do período ({periodPasses.length})</button>
+        {dailyPassIds.length > 0 && <button type="button" onClick={()=>updateImages([])}>Limpar imagens</button>}
+        {selectedPass && <button type="button" disabled={pending} onClick={()=>updateImages(dailyPassIds.includes(selectedPass.id)?dailyPassIds.filter(id=>id!==selectedPass.id):[...dailyPassIds,selectedPass.id])}>{dailyPassIds.includes(selectedPass.id)?'Remover esta passagem da composição':'Adicionar esta passagem à composição'}</button>}
+        {dailyPassIds.length > 0 && <details><summary>{dailyPassIds.length} imagens na composição</summary><ul>{dailyPassIds.map(id=>{const pass=passesById.get(id);return <li key={id}><span>{pass?.date} · {pass?.start.slice(11,16)} UTC</span><button type="button" aria-label={`Remover imagem ${id}`} onClick={()=>updateImages(dailyPassIds.filter(selected=>selected!==id))}>Remover</button></li>;})}</ul></details>}
+        {compositeMode && <><p>{dailyPassIds.length} passagens selecionadas. Áreas sobrepostas são combinadas por transparência; não representam detecção de mudança.</p><label>Opacidade das imagens: {Math.round(dailyOpacity*100)}%<input type="range" min="0.1" max="1" step="0.05" value={dailyOpacity} onChange={e=>setDailyOpacity(Number(e.target.value))}/></label></>}
       </section>
       {body}
     </div>
