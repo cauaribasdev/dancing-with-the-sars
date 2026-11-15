@@ -50,7 +50,7 @@ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerW
 await page.setViewportSize({width:1440,height:900});
 await page.goto('http://127.0.0.1:5173/region/sc?tab=radar');await page.waitForTimeout(1500);
 assert.ok((await page.locator('canvas').first().evaluate(el=>el.style.clipPath)).startsWith('path('));
-await page.getByRole('link',{name:'Alerts',exact:true}).click();await page.waitForTimeout(1500);
+await page.getByRole('link',{name:/Alertas/}).click();await page.waitForTimeout(1500);
 assert.match(page.url(),/tab=alerts/);
 await page.screenshot({path:'artifacts/redesign/sc-alerts.png'});
 assert.deepEqual(errors,[]);

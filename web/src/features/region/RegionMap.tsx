@@ -1,10 +1,11 @@
 import type { ExpressionSpecification, FilterSpecification } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Layer, Source, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import type { BBox, FootprintsGeoJSON, IsoDate, Pass, Region, RegionFeature } from "../../api/types";
 import { BaseMap } from "../../map/BaseMap";
 import { BRAZIL_BBOX, bboxToBounds } from "../../map/basemapConfig";
 import { BrowseImageLayer, type BrowseImageState } from "../../map/BrowseImageLayer";
+import { DailyImageLayer } from "../../map/DailyImageLayer";
 import { BrowseImageStatus } from "../../map/BrowseImageStatus";
 import { useLabelLayerId } from "../../map/layers";
 import { ANNOTATION_LINE, MAP_COLORS } from "../../map/mapColors";
@@ -36,6 +37,8 @@ interface Props {
   pending: boolean;
   loading: boolean;
   image: BrowseImageState;
+  dailyPassIds?: string[];
+  dailyOpacity?: number;
   onSelectPass: (pass: Pass) => void;
   /** Frames this bbox when `n` changes (selection from the list). Camera only: never used to place an image. */
   focus: { bbox: BBox; n: number } | null;
@@ -135,10 +138,16 @@ export function RegionMap({
   pending,
   loading,
   image,
+  dailyPassIds = [],
+  dailyOpacity = 0.65,
   onSelectPass,
   focus,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
+  const [imageStatuses,setImageStatuses]=useState<Record<string,string>>({});
+  const onImageStatus=useCallback((id:string,status:string)=>setImageStatuses(prev=>prev[id]===status?prev:{...prev,[id]:status}),[]);
+  const readyCount=dailyPassIds.filter(id=>imageStatuses[id]==='ready').length;
+  const excludedCount=dailyPassIds.filter(id=>['error','unavailable'].includes(imageStatuses[id])).length;
   const [chooser, setChooser] = useState<Chooser | null>(null);
   const [hovering, setHovering] = useState(false);
 
@@ -180,7 +189,7 @@ export function RegionMap({
         </div>
       ) : null}
       <div className="absolute left-3 top-3">
-        <BrowseImageStatus image={image} />
+        {dailyPassIds.length ? <div className="daily-map-status" role="status">{readyCount}/{dailyPassIds.length} imagens prontas{excludedCount>0 && <span> · {excludedCount} indisponíveis (falha ou georreferência inadequada)</span>}</div> : <BrowseImageStatus image={image} />}
       </div>
       <div className="absolute bottom-9 left-3 flex max-w-[260px] flex-col gap-1.5 rounded-[4px] bg-sheet/95 px-3 py-2 text-[12px] leading-snug text-ink shadow-[0_0_0_1px_var(--color-rule)] sm:left-4">
         <span className="flex items-center gap-2">
@@ -252,7 +261,7 @@ export function RegionMap({
       {footprints && outline && !pending ? (
         <>
           <FootprintLayers data={footprints} selectedDay={selectedDay} selectedPassId={selectedPassId} pending={pending} />
-          <BrowseImageLayer image={image} beforeId={SELECTED_CASING_LAYER} />
+          {dailyPassIds.length ? dailyPassIds.map(id=><DailyImageLayer key={id} passId={id} opacity={dailyOpacity} beforeId={SELECTED_CASING_LAYER} onStatus={onImageStatus}/>) : <BrowseImageLayer image={image} beforeId={SELECTED_CASING_LAYER} />}
         </>
       ) : null}
     </BaseMap>

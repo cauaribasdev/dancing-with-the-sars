@@ -77,7 +77,10 @@ export function RegionPage() {
   const passParam = params.get("pass");
   const selectedPass = passParam && current ? passesById.get(passParam) : undefined;
 
-  const image = useBrowseImage(selectedPass?.id);
+  const showDayImages = params.get("images") === "day" && !!selectedDay;
+  const dailyPassIds = showDayImages ? periodPasses.filter(p=>p.date===selectedDay).map(p=>p.id).sort() : [];
+  const [dailyOpacity,setDailyOpacity] = useState(0.65);
+  const image = useBrowseImage(showDayImages ? undefined : selectedPass?.id);
   const neighbors = useStackNeighbors(regionId, selectedPass, periodPasses, window, today);
   const [focus, setFocus] = useState<{ bbox: BBox; n: number } | null>(null);
 
@@ -107,7 +110,7 @@ export function RegionPage() {
     [selectPass],
   );
 
-  const changeMonth = (m: MonthKey) => setParams(new URLSearchParams({ ...monthRange(m, today) }));
+  const changeMonth = (m: MonthKey) => setParams(new URLSearchParams({ ...monthRange(m, today), tab: "radar" }));
 
   // The panel switches between browsing and pass details: bring its top into view.
   const topRef = useRef<HTMLDivElement>(null);
@@ -179,12 +182,21 @@ export function RegionPage() {
     <div ref={topRef} className="flex scroll-mt-6 flex-col gap-6">
       <header className="flex flex-col gap-2">
         <Link to={paths.overview({ region: regionId, month: period.month ?? undefined })} className="link self-start text-[13px]">
-          Back to the map of Brazil
+          Voltar ao mapa de {region?.name ?? regionId.toUpperCase()}
         </Link>
         <PageTitle>{name}</PageTitle>
         {region ? <p className="text-[13px] text-ink-3">{kindLabel(region, regions.data ?? [])}</p> : null}
         {regions.data && !region ? <p className="text-ink-2">This region does not exist. Go back to the map and pick one.</p> : null}
       </header>
+      <section className="daily-controls" aria-label="Imagens do dia">
+        <label><input type="checkbox" checked={showDayImages} disabled={!selectedDay || pending} onChange={e=>{
+          const enabled=e.currentTarget.checked;
+          const next=new URLSearchParams(params);if(enabled)next.set('images','day');else next.delete('images');setParams(next);
+          if(enabled && region)setFocus(f=>({bbox:region.bbox,n:(f?.n??0)+1}));
+        }}/> Exibir todas as passagens do dia</label>
+        {!selectedDay && <p>Selecione um dia no calendário para combinar suas imagens.</p>}
+        {showDayImages && <><p>{dailyPassIds.length} passagens selecionadas. Áreas sobrepostas são combinadas por transparência; não representam detecção de mudança.</p><label>Opacidade das imagens: {Math.round(dailyOpacity*100)}%<input type="range" min="0.1" max="1" step="0.05" value={dailyOpacity} onChange={e=>setDailyOpacity(Number(e.target.value))}/></label></>}
+      </section>
       {body}
     </div>
   );
@@ -204,6 +216,8 @@ export function RegionPage() {
           pending={pending}
           loading={passes.isFetching || footprints.isFetching}
           image={image}
+          dailyPassIds={dailyPassIds}
+          dailyOpacity={dailyOpacity}
           onSelectPass={selectPass}
           focus={focus}
         />

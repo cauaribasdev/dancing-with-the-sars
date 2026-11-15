@@ -118,8 +118,8 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
         </div>
       ) : null}
 
-      <Link to={paths.region(region.id, period)} className="link self-start text-[15px]">
-        See the passes over {name}
+      <Link to={`${paths.region(region.id, period)}&tab=radar`} className="link self-start text-[15px]">
+        Ver passagens de {region.name}
       </Link>
     </div>
   );

@@ -87,3 +87,28 @@ Precisão limitada à resolução do GeoJSON IBGE já fornecido pelo projeto. N�
 Executar aplicação: `npm run dev` (API existente e web). Frontend isolado: `npm run dev:web`; novas fontes vazias demonstrativas: `VITE_DEMO_FEEDS=true npm run dev:web`.
 
 Para repetir o smoke sem alterar dependências do projeto: instalar `@playwright/test` em diretório temporário, instalar Chromium com seu CLI, iniciar Vite na porta 5173 e rodar, da raiz, `PLAYWRIGHT_MODULE=/caminho/temporario/node_modules/playwright/index.mjs node web/scripts/territorial-smoke.mjs`. `CHROMIUM_PATH` opcional permite indicar o executável. As capturas usam mocks, não observações ambientais reais.
+
+## Correções de UX e composição diária — 2026-11-15
+
+Branch `feat/radar-diario-e-navegacao` (iniciada como `fix/state-search`), baseada no redesign local. Escopo acumulado: busca de estados, painel de exploração, retorno estadual, navegação acessível e múltiplas imagens no Radar.
+
+- Busca corrigida: normalização Unicode real, nome sem acentos e sigla com espaços, resultados visíveis clicáveis/tecláveis, vazio explícito e limpeza após seleção. Select permanece disponível, incluindo Brasil. Não depende mais do clique no mapa.
+- Painel nacional reorganizado em localização, período, métricas reais e CTA visível "Abrir Radar de UF". História em destaque visível quando disponível, detalhes e fontes em expansão progressiva. Sem números inventados.
+- Link de passagens abre explicitamente `tab=radar`. Retornos mostram e preservam o estado selecionado. Troca de estado fica em "Trocar localização", separada da navegação de seções com nomes em português, descrições e aria-current. Trocar mês mantém a aba Radar e limpa seleção anterior.
+- Radar: após escolher um dia, "Exibir todas as passagens do dia" ativa fontes raster independentes, com opacidade ajustável. Preferência registrada em `images=day`; arquivos continuam georreferenciados por corners e recortados ao território. Carregamento sob demanda, estados independentes e contagem de imagens prontas/indisponíveis. Georef nula ou low continua bloqueada pelo carregador existente. Seleção individual, detalhes e links de download permanecem disponíveis enquanto todas as imagens estão ligadas. É uma sobreposição visual, não mosaico analítico nem detecção de mudança. O download permanece individual; não foi criado download em lote.
+
+### Delegação e autoria deste incremento
+
+3 tarefas delegadas ao Qwen via junior.sh: RegionPicker, StateNavigation e DailyImageLayer. StateNavigation foi aproveitado após uma revisão (com ajuste final de acessibilidade pelo Codex). DailyImageLayer foi aproveitado com correção de imports pelo Codex na integração. RegionPicker foi reimplementado pelo Codex após duas correções de revisão malsucedidas. Portanto: 1 componente aprovado do Qwen com ajuste final, 1 componente produzido pelo Qwen com correção de integração e 1 tarefa assumida após falhas. Houve 6 invocações do script, incluindo revisões, além das retentativas internas. Erros de typecheck de arquivos de outras tarefas também contaminaram algumas tentativas; não foram tratados como evidência de comportamento correto.
+
+Codex: design e integração multi-arquivo, preservação de contexto em links, composição diária, diagnóstico/correção final da busca e testes de integração. Arquivos de tarefa em `tasks/frontend/{state-search-fix,state-navigation,daily-image-layer}.md`. Implementações revisadas por git diff.
+
+### Evidências
+
+- 80 testes unitários aprovados (11 arquivos), TypeScript/Vite build aprovado, diff check aprovado.
+- `web/scripts/state-search-smoke.mjs`: nome sem acentos, sigla com espaços, resultados, Enter, vazio, CTA Radar, estado preservado ao navegar/retornar e busca mobile sem overflow.
+- `web/scripts/daily-radar-smoke.mjs`: três passagens sintéticas do mesmo dia, duas imagens carregadas simultaneamente e terceira excluída por georef nula; detalhes e URL de download preservados; desligamento retorna ao modo individual.
+- `web/scripts/territorial-smoke.mjs`: regressão de máscara, zoom, arraste, mobile e raster cruzando contorno passou com os novos rótulos.
+- Smoke em Chromium com API interceptada: erros 503 são fixtures intencionais de fontes indisponíveis, não falhas do teste. Sem alegação de validação ao vivo de downloads Earthdata/ASF. Inspeção visual de screenshots desktop realizada.
+
+Sem backend ou dependências novas. Sem publicação/merge deste incremento. `.gitignore` preexistente preservado.

@@ -5,14 +5,14 @@ import { apiGet, describeError } from '../../api/client';
 import { useRegions, useRegionPasses, useRegionPairs, useRegionsGeoJSON } from '../../api/hooks';
 import { NotFoundPage } from '../../app/NotFoundPage';
 import { paths } from '../../app/paths';
+import { StateNavigation } from './StateNavigation';
 import { RegionPage } from './RegionPage';
 import { CoverageMap } from '../overview/CoverageMap';
 import { RegionPicker } from '../overview/RegionPicker';
-import { PhenomenaNotice } from '../../ui/PhenomenaNotice';
 import { demoFeed } from './demoFeeds';
 import { normalizeRegionQuery } from './navigation';
 
-const tabs = ['overview', 'radar', 'alerts', 'help', 'posts'];
+
 const states = new Set('ac al ap am ba ce df es go ma mt ms mg pa pb pr pe pi rj rn rs ro rr sc sp se to'.split(' '));
 export function StatePage() {
  const { regionId = '' } = useParams();
@@ -31,11 +31,14 @@ function StateContent({regionId}: {regionId:string}) {
  const geo = useRegionsGeoJSON('state');
  const [controlsOpen,setControlsOpen]=useState(false);
  return <div className="state-dashboard"><aside className="state-controls"><button className="state-controls-toggle" aria-expanded={controlsOpen} onClick={()=>setControlsOpen(!controlsOpen)}>Localização e camadas {controlsOpen ? "−" : "+"}</button><div className={`state-control-body ${controlsOpen ? "is-open" : ""}`}>
- <Link to="/">← Brasil</Link>
+ <Link className="territory-back" to={paths.overview({region:regionId,month:window.start.slice(0,7)})}>← Mapa de {regions.data?.find(r=>r.id===regionId)?.name ?? regionId.toUpperCase()}</Link>
+ <div className="state-location"><span className="panel-eyebrow">TERRITÓRIO EM ANÁLISE</span><strong>{regions.data?.find(r=>r.id===regionId)?.name ?? regionId.toUpperCase()}</strong></div>
+ <details className="sidebar-disclosure"><summary>Trocar localização</summary>
  <RegionPicker regions={regions.data ?? []} value={regionId} onChange={id=>{ if(id==='br'){navigate('/');return;} const p=new URLSearchParams(canonical);p.delete('day');p.delete('pass');navigate(`/region/${id}?${p}`);}}/>
- <PhenomenaNotice/>
+ </details>
+ <p className="sidebar-hint">Período UTC<br/>{window.start} — {window.end}</p>
  {warning && <p role="status">Parâmetros inválidos. Aplicado o período padrão de 30 dias UTC.</p>}
- <nav aria-label="Seções do estado">{tabs.map(t=><Link key={t} aria-current={t===tab?'page':undefined} to={`?${new URLSearchParams({...Object.fromEntries(normalized.params),tab:t})}`}>{t[0].toUpperCase()+t.slice(1)}</Link>)}</nav>
+ <StateNavigation tab={tab} query={canonical}/>
  </div></aside><div className="state-workspace"><div className="territory-heading"><h1>{regions.data?.find(r=>r.id===regionId)?.name ?? regionId.toUpperCase()}</h1><span>Observação territorial</span></div>
  {tab!=='radar' && <div className="state-main-map"><CoverageMap geo={geo.data} geoError={geo.error ? describeError(geo.error) : null} coverage={undefined} coverageLoading={geo.isFetching} coveragePending={true} month={window.start.slice(0,7)} regions={regions.data??[]} selectedId={regionId} onSelect={()=>{}}/></div>}
  {tab==='radar' ? <RegionPage/> : <section className="state-shell"><p>Período: {window.start} — {window.end} (UTC)</p>{tab==='overview' ? <RadarSummary id={regionId} window={window}/> : <SourcePanel id={regionId} feature={tab} window={window}/>}</section>}
