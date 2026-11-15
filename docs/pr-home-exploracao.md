@@ -22,7 +22,7 @@ Esta PR consolidada depende da PR #3 (`feat/frontend-prototipo`, por sua vez sob
 - Chromium: home com imagens reais, logos, estados de erro/vazio, teclado, links antigos, desktop e mobile 320/390px; painéis opcionais com respostas controladas em 320px.
 - Smokes sintéticos: busca/seleção estadual, imagens diárias, multiday, reload, troca de estado e recorte raster/vetorial atravessando limites/furos.
 - INMET consultado ao vivo: endpoint estadual RS respondeu 200 com 4 alertas ativos; timezone CAP foi normalizado para UTC.
-- `/alerts` apresenta alertas ativos e encerrados no snapshot CAP móvel de oito dias, filtra por estado e está ligado no cabeçalho; o mapa não sobrepõe círculos e contagens aos polígonos estaduais.
+- `/alerts` apresenta alertas ativos e encerrados no snapshot CAP móvel de oito dias, filtra por estado e está ligado no cabeçalho; o mapa não sobrepõe círculos e contagens aos polígonos estaduais. Smoke Chromium com respostas INMET sintéticas confirmou navegação, duas listas, filtro/URL e layout sem overflow a 320 px.
 - Axe em Chromium e Firefox, depois da hidratação, nas rotas `/`, `/explore`, `/region/rs?tab=alerts` e `/compare`: nenhuma violação WCAG A/AA. Smoke da home repetido após a tradução; link de salto recebeu o primeiro foco.
 - Capturas em `artifacts/home/` e `artifacts/redesign/`.
 
