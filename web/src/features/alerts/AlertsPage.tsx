@@ -56,7 +56,7 @@ export function AlertsPage() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-7 px-4 py-7 sm:px-7 sm:py-10">
       <header className="flex flex-col gap-5 border-b border-rule pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-3">
-          <p className="text-[12px] font-[650] uppercase tracking-[0.12em] text-signal">Avisos oficiais · INMET</p>
+          <p className="text-[12px] font-[650] uppercase tracking-[0.12em] text-[var(--space-yellow)]">Avisos oficiais · INMET</p>
           <PageTitle>Alertas meteorológicos</PageTitle>
           <p className="max-w-2xl text-[15px] leading-relaxed text-ink-2">
             Consulte avisos ativos e os encerrados recentemente. O histórico disponível nesta página cobre o snapshot CAP consultado nos últimos oito dias.
