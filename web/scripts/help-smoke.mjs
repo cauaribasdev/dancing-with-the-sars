@@ -10,6 +10,7 @@ const unavailable = { error: { code: "upstream_unavailable", message: "fixture" 
 const empty = { region, reference: { lon: -49.5, lat: -27.5, kind: "state" }, total: 0, organizations: [], campaigns: [], campaignsStatus: "empty" };
 const withOrganization = {
   ...empty,
+  dataSource: "stale",
   total: 1,
   organizations: [{
     id: "osc-1", name: "Organização exemplo", areas: ["5"], municipality: { code: "4205407", name: "Florianópolis" },
@@ -27,7 +28,7 @@ async function routeApi(page, organizationsResponse) {
     if (url.pathname === "/api/regions/sc/organizations") {
       return organizationsResponse === "unavailable"
         ? route.fulfill({ status: 503, json: unavailable })
-        : route.fulfill({ json: { ...organizationsResponse, dataSource: "cache", nextCursor: null } });
+        : route.fulfill({ json: { ...organizationsResponse, dataSource: organizationsResponse.dataSource ?? "cache", nextCursor: null } });
     }
     return route.fulfill({ status: 503, json: unavailable });
   });
@@ -58,6 +59,7 @@ try {
   await distance.goto("http://localhost:5173/region/sc?tab=help");
   await distance.getByText("Organização exemplo").waitFor();
   await distance.getByText("5.0 km").waitFor();
+  await distance.getByText("Dados desatualizados.").waitFor();
   const requestsBeforePan = organizationRequests;
   const map = await distance.locator(".territorial-map").boundingBox();
   assert.ok(map, "Expected the state map");

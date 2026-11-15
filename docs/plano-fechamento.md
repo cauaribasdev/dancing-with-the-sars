@@ -111,11 +111,11 @@ O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificaç
 | A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
 | A17 | Verificado em unidade + smoke | Expiração muda de ativo para histórico com relógio do navegador avançado, sem novo fetch. |
 | A18 | Verificado por smoke | `alerts-smoke.mjs` força timezone local de São Paulo e confirma o dia e hora UTC do CAP na virada local de dia. |
-| A19 | Parcial | `/alerts` mostra aviso stale específico do INMET no smoke; outras seções ainda não têm falha-com-cache verificada via browser. |
+| A19 | Parcial | `/alerts` e Help mostram stale com dados no smoke; Overview e Posts ainda não têm falha-com-cache verificada via browser. |
 | A20 | Verificado por smoke | `alerts-smoke.mjs` confirma que uma resposta antiga, liberada depois da UF atual, não substitui os dados da UF selecionada. |
 | A21 | Verificado por smoke | `help-smoke.mjs` distingue serviço indisponível (alerta/retry) de resultado vazio (mensagem vazia sem erro). |
 | A22 | Verificado por smoke | `help-smoke.mjs` dá resposta vazia de campanhas e confirma que a interface não inventa motivo. |
 | A23 | Verificado por smoke | `help-smoke.mjs` arrasta o mapa e confirma que a distância/reference permanece estável sem nova consulta. |
-| A24 | Parcial | `/alerts` smoke usa teclado, expansão de texto e viewport 320 px; demais larguras e leitor de tela não foram inspecionados. |
+| A24 | Parcial | `/alerts` smoke usa teclado, expansão de texto longo, UTC e viewports 390/320 px; leitor de tela, Safari, zoom e foco via inspeção visual ainda faltam. |
 
 O smoke territorial passou após restringir o seletor à navegação “Seções do estado”; o seletor anterior se tornou ambíguo com o link global “Alertas”.

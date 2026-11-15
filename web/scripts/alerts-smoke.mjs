@@ -14,7 +14,8 @@ try {
   const active = {
     id: "a1", sent: "2026-11-15T10:00:00.000Z", event: "Chuva", severity: "severe", color: "#ff0000",
     onset: "2026-11-15T02:30:00.000Z", expires: "2026-11-15T12:01:00.000Z", headline: "Alerta ativo de chuva",
-    description: "Descrição oficial.", instruction: "Procure abrigo.", url: "https://avisos.inmet.gov.br/a1",
+    description: `Descrição oficial. ${Array.from({ length: 30 }, (_, index) => `Orientação ${index + 1} para proteção local.`).join(" ")}`,
+    instruction: "Procure abrigo.", url: "https://avisos.inmet.gov.br/a1",
     municipalities: [{ code: "4314902", name: "Porto Alegre" }], municipalityCountTotal: 1, geometry: null, status: "active",
   };
   const expired = {
@@ -59,6 +60,15 @@ try {
   await page.clock.fastForward(60_000);
   await page.getByText("Nenhum alerta ativo foi retornado para Brasil.").waitFor();
   await page.getByText("Alerta ativo de chuva").waitFor();
+  await page.getByText("Detalhes e orientações").last().focus();
+  await page.keyboard.press("Enter");
+  await page.getByText("Descrição oficial.").last().waitFor();
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `No horizontal overflow at ${width}px with expanded official text`);
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.getByLabel("Filtrar alertas por estado").selectOption("rs");
   await page.waitForURL("**/alerts?region=rs");
