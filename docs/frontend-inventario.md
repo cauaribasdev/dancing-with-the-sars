@@ -52,3 +52,38 @@ Qwen: `demoFeeds.ts`, primeira execução aprovada. `navigation.ts` foi delegado
 `VITE_DEMO_FEEDS=true npm run dev:web` habilita somente fixtures vazias das novas fontes em desenvolvimento, com identificação visível. Produção ignora essa flag. Mapa, resumo e Radar continuam dependendo da API existente. Sem flag, novas rotas indisponíveis mostram erro local. Não é uma demonstração offline completa, nem conclusão de qualquer marco integral do plano. A simplificação incremental de M0 não substitui o contrato planejado: tipos locais são projeções provisórias e não geração OpenAPI.
 
 Arquivos: `web/src/features/region/{StatePage.tsx,navigation.ts,navigation.test.ts,demoFeeds.ts,demoFeeds.test.ts}`, `web/src/app/{router.tsx,styles.css}`, `web/src/features/overview/OverviewPage.tsx`; tarefas reproduzíveis em `tasks/frontend/`. `.gitignore` preexistente preservado; ARCHITECTURE.md continua local. Documentação versionada reside neste inventário. Publicar como rascunho enquanto os critérios restantes estiverem pendentes.
+
+## Redesign territorial — 2026-11-15
+
+Branch local `feat/territorial-redesign`, baseada no commit da PR #3. Na inspeção, #1 → dev, #2 → #1, #3 → #2 e #4 → dev continuavam abertas. Nenhum merge automático. `.gitignore` preexistente permanece fora da entrega.
+
+### Entrega e autoria
+
+- Codex: integração do tema preto/azul, cabeçalho compacto, sidebar de 280px, mapa predominante, indicadores de aquisições/período/fonte e controles recolhíveis mobile. Overview e histórias complementares ficam recolhíveis; as cinco seções estaduais e Radar permanecem acessíveis.
+- Qwen: `PhenomenaNotice.tsx` e `RegionPicker.tsx` (busca por nome/sigla sem acentos, Brasil e retorno, preservação da seleção). **2 tarefas delegadas, 2 concluídas pelo Qwen, 0 assumidas pelo Codex após falhas nesta execução.** O seletor recebeu duas correções de revisão; houve retentativas internas do script por erros de typecheck. São quatro invocações reais de junior.sh no total, contando as correções. As tarefas estão em `tasks/frontend/location-picker.md` e `territory-note.md`.
+- Codex: `TerritoryClip.tsx`, `territory.ts`, testes geoespaciais e smoke de navegador, por envolverem projeção, câmera e composição de pixels. Revisão por diff de todos os arquivos alterados/novos.
+
+### Técnica territorial
+
+O GeoJSON IBGE existente é projetado pela câmera ativa do MapLibre. Cada anel de Polygon/MultiPolygon vira um subcaminho de `clip-path: path(evenodd, ...)`, aplicado ao **canvas WebGL inteiro**. Assim, pixels de vetores, raster e imagens georreferenciadas compartilham o mesmo recorte; ilhas e furos são preservados. Não é recorte por bbox, imagem estática nem deformação da geometria.
+
+Na visão nacional entram somente geometrias estaduais brasileiras; na estadual, somente a geometria do ID selecionado. O estilo territorial não carrega países vizinhos. O canvas começa fechado (`inset(100%)`) e permanece fechado sem geometria, inclusive em transições. O recorte acompanha renderizações e resize; resize reenquadra a geometria. World copies estão desativadas. MaxBounds limita a câmera com margens neutras para não cortar o território em viewports de proporções diferentes. Essas margens não revelam dados fora do polígono.
+
+Radar oculta footprints e imagem durante placeholder de outro contexto. Mapas legados de comparação/história recebem por padrão a máscara nacional, sem alterar a comparação de imagens; a visão estadual explícita usa a máscara estadual. Marcador HTML de história foi retirado do mapa nacional, pois não pertence ao canvas; acesso à história permanece no painel e navegação. Outros overlays HTML são controles/informações, não camadas geográficas.
+
+### Dados e limitações
+
+Não existem camadas geográficas contratadas de alagamentos, enchentes, deslizamentos ou tornados. A interface informa a indisponibilidade e não inventa checkboxes operacionais, áreas afetadas ou indicadores de desastres. A camada efetiva continua sendo cobertura/passagens radar. Mocks novos permanecem identificados conforme incremento anterior.
+
+Precisão limitada à resolução do GeoJSON IBGE já fornecido pelo projeto. Não foi feita auditoria cartográfica externa. O recorte é visual, não modifica/download recortado dos dados originais. Navegadores sem suporte a CSS path evenodd devem manter o canvas fechado; compatibilidade foi exercitada em Chromium, não Safari/Firefox. Integração ao vivo das imagens ASF, APIs novas e fontes ambientais continua pendente; nenhuma funcionalidade backend foi implementada.
+
+### Validação e reprodução
+
+- `npm test -w web`: 80 testes aprovados, 11 arquivos. Inclui Polygon com furo, MultiPolygon/ilhas, reprojeção e todas as 27 geometrias estaduais reais fornecidas.
+- `npm run build`: TypeScript + Vite aprovados. Sem novo script de lint e sem dependências adicionadas aos manifests.
+- `web/scripts/territorial-smoke.mjs`: smoke Chromium com respostas HTTP **sintéticas** e limites reais do repositório. Exercita seleção Brasil/SC, pesquisa, zoom, resize, rota Radar e aba Alerts com falha isolada. Teste de pixels verifica raster e traço vetorial que atravessam polígono côncavo e furo: pixels externos ficam ocultos, internos permanecem. Isso valida a técnica de composição; não substitui teste de imagens reais da ASF.
+- Inspeção visual efetiva das capturas desktop 1440×900 e mobile 390×844 em `artifacts/redesign/`. Corrigidos enquadramento inicialmente cortado por maxBounds e máscara desatualizada durante transição. Sem alegação de auditoria completa WCAG.
+
+Executar aplicação: `npm run dev` (API existente e web). Frontend isolado: `npm run dev:web`; novas fontes vazias demonstrativas: `VITE_DEMO_FEEDS=true npm run dev:web`.
+
+Para repetir o smoke sem alterar dependências do projeto: instalar `@playwright/test` em diretório temporário, instalar Chromium com seu CLI, iniciar Vite na porta 5173 e rodar, da raiz, `PLAYWRIGHT_MODULE=/caminho/temporario/node_modules/playwright/index.mjs node web/scripts/territorial-smoke.mjs`. `CHROMIUM_PATH` opcional permite indicar o executável. As capturas usam mocks, não observações ambientais reais.

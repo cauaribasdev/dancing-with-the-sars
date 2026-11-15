@@ -9,21 +9,21 @@
   /* Serif italic: names of places and waters, as on topographic charts. */
   --font-place: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
 
-  --color-paper: #f2f3f0; /* same tone as the basemap background: panel and map are one sheet of paper */
-  --color-sheet: #fbfbfa; /* surfaces on top of the map (legend, tooltip) */
-  --color-ink: #16202a; /* main text, 14.8:1 on paper */
-  --color-ink-2: #4d5965; /* secondary text, 6.4:1 */
-  --color-ink-3: #5f6a74; /* quiet text, 5.0:1 (lowest allowed for text) */
-  --color-rule: #cdd3d6; /* rules and borders */
-  --color-rule-strong: #9aa4ab;
+  --color-paper: #05070D; /* same tone as the basemap background: panel and map are one sheet of paper */
+  --color-sheet: #0D1320; /* surfaces on top of the map (legend, tooltip) */
+  --color-ink: #F8FAFC; /* main text, 14.8:1 on paper */
+  --color-ink-2: #b6c2d2; /* secondary text, 6.4:1 */
+  --color-ink-3: #94A3B8; /* quiet text, 5.0:1 (lowest allowed for text) */
+  --color-rule: #263244; /* rules and borders */
+  --color-rule-strong: #52647c;
 
   /*
    * Signal yellow: annotations drawn ON THE MAP (selection, pass outlines, markers).
    * Always with an ink casing around it: alone it disappears on light paper and on the image's green.
    * Never use it as a text color in the panel (1.45:1 on paper).
    */
-  --color-signal: #ffc21a;
-  --color-signal-wash: #fff3cc; /* background of a selected item in the panel, with ink text (14.9:1) */
+  --color-signal: #1479FF;
+  --color-signal-wash: #172b48; /* background of a selected item in the panel, with ink text (14.9:1) */
 
   /* Coverage ramp (days with a pass), single hue, validated: monotone L, ΔL ≥ 0.06, light end 2.06:1. */
   --color-cov-1: #67b6ce;
@@ -34,8 +34,8 @@
   --color-cov-6: #003849;
 
   /* Caution (stale data). Always with an icon and text, never color alone. */
-  --color-caution: #7a4a00;
-  --color-caution-wash: #fbf0d6;
+  --color-caution: #fbbf24;
+  --color-caution-wash: #30271a;
 
   /* Background behind radar images shown outside the map (thumbnails). */
   --color-radar-ground: #1d2329;
@@ -155,3 +155,49 @@
 .state-shell :focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
 .state-shell section { border-top: 1px solid #aaa; padding: 1rem 0; }
 .state-shell button, .state-shell select { padding: .5rem; border: 1px solid currentColor; }
+
+.territorial-map { background: #05070D; }
+.territorial-map .maplibregl-canvas { clip-path: inset(100%); }
+
+/* Territorial workspace: the map owns the available space. */
+.territory-stage { display:flex; flex-direction:column; height:100%; min-height:0; }
+.territory-canvas { flex:1; min-height:280px; }
+.territory-stats { display:flex; gap:24px; flex-wrap:wrap; padding:14px 20px; border-top:1px solid #263244; background:#0D1320; font-size:12px; color:#94A3B8; }
+.territory-stats strong { display:block; color:#F8FAFC; font-weight:600; }
+.state-dashboard { display:grid; grid-template-columns:280px minmax(0,1fr); min-height:100%; }
+.state-controls { padding:20px; background:#0D1320; border-right:1px solid #263244; display:flex; flex-direction:column; gap:24px; }
+.state-controls nav { display:flex; flex-direction:column; gap:8px; }
+.state-controls nav a { padding:10px; border-radius:4px; }
+.state-controls [aria-current="page"] { background:#172b48; color:#8cc1ff; }
+.state-workspace { min-width:0; }
+.state-main-map { height:65svh; min-height:360px; }
+
+.maplibregl-ctrl-group { background:#111827 !important; }
+.maplibregl-ctrl-icon { filter:invert(1); }
+.maplibregl-ctrl-attrib { background:#0D1320 !important; color:#94A3B8; }
+@media(max-width:767px) {
+ .state-dashboard { display:flex; flex-direction:column; }
+ .state-controls { padding:12px; gap:12px; border-right:0; }
+ .state-controls nav { flex-direction:row; overflow-x:auto; }
+ .state-main-map { height:60svh; min-height:300px; }
+ .territory-stats { gap:12px; padding:10px; }
+}
+
+.territory-heading { padding:12px 20px; border-bottom:1px solid #263244; display:flex; align-items:baseline; justify-content:space-between; gap:12px; background:#0D1320; }
+.territory-heading h1,.territory-heading h2 { font-size:18px; font-weight:600; }
+.territory-heading span { font-size:11px; color:#94A3B8; }
+.state-control-body { display:flex; flex-direction:column; gap:24px; }
+.state-controls-toggle { display:none; }
+@media(min-width:768px) {
+ .state-dashboard { height:calc(100svh - 48px); overflow:hidden; }
+ .state-workspace,.state-controls { overflow-y:auto; }
+ .state-workspace > .flex { height:calc(100% - 52px); }
+}
+@media(max-width:767px) {
+ .state-controls-toggle { display:block; text-align:left; min-height:44px; }
+ .state-control-body { display:none; }
+ .state-control-body.is-open { display:flex; }
+ .territory-heading { padding:10px 12px; }
+}
+
+.maplibregl-ctrl-attrib-inner, .maplibregl-ctrl-attrib a { color:#94A3B8 !important; }

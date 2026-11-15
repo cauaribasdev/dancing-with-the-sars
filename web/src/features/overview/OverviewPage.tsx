@@ -9,6 +9,7 @@ import { CoverageMap } from "./CoverageMap";
 import { MonthPicker } from "../../ui/MonthPicker";
 import { RegionPicker } from "./RegionPicker";
 import { RegionSummary } from "./RegionSummary";
+import { PhenomenaNotice } from "../../ui/PhenomenaNotice";
 import { StoryCard } from "./StoryCard";
 
 /**
@@ -58,10 +59,9 @@ export function OverviewPage() {
   const panel = (
     <div className="flex flex-col gap-7">
       <header className="flex flex-col gap-3">
-        <PageTitle>Where the radar passed</PageTitle>
+        <PageTitle>{selectedRegion?.name ?? "Brasil"}</PageTitle>
         <p className="max-w-[36ch] text-[15px] leading-[1.55] text-ink-2">
-          NISAR, a radar satellite from NASA and ISRO, sees the ground through clouds, day and night. Pick a month to see
-          on how many days it passed over each state.
+          Observação territorial por radar NISAR. Cobertura de aquisições, não detecção automática de desastres.
         </p>
       </header>
 
@@ -87,7 +87,7 @@ export function OverviewPage() {
           disabled={!regions.data}
         />
         {regions.isError ? <ErrorMessage onRetry={() => regions.refetch()}>{describeError(regions.error)}</ErrorMessage> : null}
-        <RegionSummary
+        <details><summary>Explorar dados e Radar</summary><RegionSummary
           region={selectedRegion}
           regions={regions.data ?? []}
           coverage={coverageData}
@@ -95,10 +95,11 @@ export function OverviewPage() {
           month={month}
           pending={pending}
           onSelect={(region) => update({ region })}
-        />
+        /></details>
       </section>
 
-      {story ? <StoryCard story={story} detail={storyDetail.data} /> : null}
+      <PhenomenaNotice/>
+      {story ? <details><summary>História em destaque</summary><StoryCard story={story} detail={storyDetail.data} /></details> : null}
     </div>
   );
 
@@ -107,7 +108,7 @@ export function OverviewPage() {
       panelLabel="Map controls"
       panel={panel}
       map={
-        <CoverageMap
+        <div className="territory-stage"><div className="territory-heading"><h2>{selectedRegion?.name ?? "Brasil"}</h2><span>Cobertura radar · Limites IBGE</span></div><div className="territory-canvas"><CoverageMap
           geo={geo.data}
           geoError={geo.isError ? describeError(geo.error) : null}
           coverage={coverageData}
@@ -119,7 +120,7 @@ export function OverviewPage() {
           onSelect={(region) => update({ region })}
           story={story}
           storyPlace={storyDetail.data?.places[0]}
-        />
+        /></div><div className="territory-stats"><span>Passagens <strong>{pending ? "—" : (selectedId === "br" ? coverageData?.total.acquisitions : coverageData?.states.find(s=>s.id===selectedId)?.acquisitions) ?? "—"}</strong></span><span>Período UTC <strong>{period.start} — {period.end}</strong></span><span>Fonte <strong>NISAR / ASF</strong></span></div></div>
       }
     />
   );

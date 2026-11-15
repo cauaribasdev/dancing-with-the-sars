@@ -11,7 +11,7 @@ import { ErrorMessage, ProgressBar } from "../../ui/feedback";
 import { formatDayShort, formatMonth, plural } from "../../ui/format";
 import { CoverageLegend } from "./CoverageLegend";
 import { coverageFillExpression } from "./coverageScale";
-import { StoryMarker } from "./StoryMarker";
+
 
 interface Props {
   geo: RegionsGeoJSON | undefined;
@@ -90,7 +90,7 @@ function CoverageLayers({
         id="states-gap"
         type="line"
         beforeId={beforeId}
-        paint={{ "line-color": MAP_COLORS.paper, "line-width": 1, "line-opacity": 0.9 }}
+        paint={{ "line-color": "#52647c", "line-width": 1, "line-opacity": 0.9 }}
       />
       {/* State with no pass: dashed outline (the legend shows the same) */}
       <Layer
@@ -146,12 +146,13 @@ export function CoverageMap({
   regions,
   selectedId,
   onSelect,
-  story,
-  storyPlace,
+
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [hover, setHover] = useState<Hover | null>(null);
-  const data = useMemo(() => (geo ? joinCoverage(geo, coverage) : undefined), [geo, coverage]);
+  const visibleGeo = useMemo(() => geo ? {...geo, features: geo.features.filter(f => selectedId === "br" || f.properties.id === selectedId)} : undefined, [geo, selectedId]);
+  const territory = useMemo(() => visibleGeo?.features.map(f => f.geometry) ?? [], [visibleGeo]);
+  const data = useMemo(() => (visibleGeo ? joinCoverage(visibleGeo, coverage) : undefined), [visibleGeo, coverage]);
   const statesById = useMemo(() => new Map(coverage?.states.map((s) => [s.id, s])), [coverage]);
   const regionById = useMemo(() => new Map(regions.map((r) => [r.id, r])), [regions]);
 
@@ -203,7 +204,7 @@ export function CoverageMap({
       ) : null}
       {/* Lifted above the attribution line, which spans most of the map width when expanded. */}
       <div className="absolute bottom-9 left-3 sm:left-4">
-        <CoverageLegend month={month} dimmed={coveragePending} />
+        {coverage || coverageLoading ? <CoverageLegend month={month} dimmed={coveragePending} /> : <span className="rounded bg-sheet p-2 text-ink-2 text-xs">Limites territoriais · IBGE</span>}
       </div>
       {hover && hoverRegion ? (
         <div
@@ -216,7 +217,7 @@ export function CoverageMap({
         >
           <p className="place text-[17px] leading-tight text-ink">{regionName(hoverRegion)}</p>
           {coveragePending || !hoverCov ? (
-            <p className="text-ink-3">Counting passes…</p>
+            <p className="text-ink-3">{coverageLoading ? "Consultando cobertura…" : "Cobertura indisponível nesta visualização."}</p>
           ) : (
             <>
               <p className="num font-[650] text-ink">{plural(hoverCov.distinctDates, "day with a pass", "days with a pass")}</p>
@@ -233,6 +234,9 @@ export function CoverageMap({
 
   return (
     <BaseMap
+      key={selectedId}
+      territory={territory}
+      initialBbox={regionById.get(selectedId)?.bbox ?? BRAZIL_BBOX}
       ref={mapRef}
       interactiveLayerIds={[FILL_LAYER]}
       onMouseMove={onMove}
@@ -251,7 +255,7 @@ export function CoverageMap({
           hasCoverage={!!coverage}
         />
       ) : null}
-      {story ? <StoryMarker story={story} place={storyPlace} region={regionById.get(story.regionId)} /> : null}
+
     </BaseMap>
   );
 }

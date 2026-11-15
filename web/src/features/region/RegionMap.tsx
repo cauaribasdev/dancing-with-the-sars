@@ -237,6 +237,7 @@ export function RegionMap({
   return (
     <BaseMap
       key={region?.id ?? "none"}
+      territory={outline ? [outline.geometry] : []}
       ref={mapRef}
       initialBbox={bbox}
       initialPadding={region?.kind === "state" ? 48 : 24}
@@ -248,7 +249,7 @@ export function RegionMap({
       overlay={overlay}
     >
       {outline ? <RegionOutline feature={outline} /> : null}
-      {footprints ? (
+      {footprints && outline && !pending ? (
         <>
           <FootprintLayers data={footprints} selectedDay={selectedDay} selectedPassId={selectedPassId} pending={pending} />
           <BrowseImageLayer image={image} beforeId={SELECTED_CASING_LAYER} />
