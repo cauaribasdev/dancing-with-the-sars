@@ -27,24 +27,25 @@ export function Layout() {
       >
         Pular para o conteúdo
       </a>
-      <header className="app-header z-20 flex min-h-16 flex-wrap items-center gap-x-3 gap-y-1 border-b border-rule bg-paper px-3 py-2 sm:h-16 sm:flex-nowrap sm:px-5">
-        <Link to={paths.home()} className="min-w-0 flex-1 rounded-sm sm:flex-none" aria-label="Dancing With the SARs, início">
-          <span className="block truncate font-semibold text-[14px]">Dancing With the SARs</span><span className="hidden text-[11px] text-ink-3 sm:block">Inteligência territorial · Observação da Terra</span>
-        </Link>
-        <nav aria-label="Navegação principal" className="order-3 flex w-full items-center gap-1 overflow-x-auto sm:order-none sm:w-auto sm:gap-1.5">
-          <NavLink to={paths.home()} end className={navClass}>Início</NavLink>
-          <NavLink to={paths.overview()} end className={navClass}>
-            Mapa
-          </NavLink>
-          <NavLink to={paths.alerts()} className={navClass}>Alertas</NavLink>
-          {firstStory ? (
-            <NavLink to={paths.story(firstStory.id)} className={navClass}>
-              História
-            </NavLink>
-          ) : null}
-        </nav>
-        <p className="ml-auto hidden text-[12px] text-ink-2 lg:block">Projeto para o NASA Space Apps 2026</p>
-        <SpaceAppsBrand compact />
+      <header className="app-header z-20">
+        <div className="app-header-inner">
+          <Link to={paths.home()} className="app-header-brand" aria-label="Dancing With the SARs, início">
+            <span className="app-header-mark" aria-hidden="true">SAR</span>
+            <span className="app-header-brand-copy">
+              <span className="app-header-title">Dancing With the SARs</span>
+              <span className="app-header-subtitle">Inteligência territorial · Observação da Terra</span>
+            </span>
+          </Link>
+          <nav aria-label="Navegação principal" className="app-header-nav">
+            <NavLink to={paths.home()} end className={navClass}>Início</NavLink>
+            <NavLink to={paths.overview()} end className={navClass}>Mapa</NavLink>
+            <NavLink to={paths.alerts()} className={navClass}>Alertas</NavLink>
+            {firstStory ? (
+              <NavLink to={paths.story(firstStory.id)} className={navClass}>História</NavLink>
+            ) : null}
+          </nav>
+          <div className="app-header-event"><span>NASA Space Apps</span><SpaceAppsBrand compact /></div>
+        </div>
       </header>
       <main id="content" className="min-h-0 overflow-y-auto">
         <Outlet />

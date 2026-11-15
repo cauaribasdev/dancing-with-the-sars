@@ -83,9 +83,11 @@ Cada incremento será delegado pelo `./junior.sh` conforme `AGENTS.md`, em branc
 - [x] F0 baseline de comandos na branch de trabalho: testes 33 servidor + 89 web; typecheck e build passaram.
 - [x] F1 schemas Zod e especificação OpenAPI 3.1 dos três feeds; testes verificam fixtures e referências.
 - [x] F2 rotas, contratos, cache e adaptadores INMET, IPEA e Posts; 62 testes do servidor passam. A carga fria IPEA foi concluída e o cache pré-aquecido foi validado.
-- [x] F3 integração dos painéis de fonte, paginação, página dedicada `/alerts` e histórico de oito dias; consultas têm cache keys próprias e AbortSignal. O cabeçalho tem link persistente e o mapa encaminha para a lista, sem círculos/contagens sobre polígonos.
+- [x] F3 integração dos painéis de fonte, paginação, página dedicada `/alerts` e histórico de oito dias; consultas têm cache keys próprias e AbortSignal. Cabeçalho reorganizado com marca SAR, navegação destacada e adaptação para celulares; o mapa encaminha para a lista, sem círculos/contagens sobre polígonos.
 - [ ] F4 parcial: 153 testes (62 servidor + 91 web), typecheck e build passam. Smokes Chromium com fixtures para busca estadual, radar diário, composição multiday, recorte territorial e `/alerts` passaram. O smoke da home foi repetido, mas expirou após 120 s aguardando as imagens externas; o endpoint ASF respondeu aos headers, porém o corpo de 5,2 MB não concluiu em 35 s no Chromium. Essa repetição não confirma a jornada da home nesta execução. Axe em `/alerts` no Chromium e Firefox: zero violações WCAG A/AA; nas quatro rotas anteriores (`/`, `/explore`, `/region/rs?tab=alerts`, `/compare`) há evidência registrada no inventário. Primeiro foco “Pular para o conteúdo”; `prefers-reduced-motion` reconhecido. Ainda não houve revisão com leitor de tela, Safari ou zoom; A01–A24 não têm aceite completo.
 - [x] F5 PR #5 publicada e aberta contra `feat/frontend-prototipo`; sem merge. PRs #1–#4 permanecem abertas como dependências upstream.
+
+Atualização do cabeçalho (2026-11-15): testes, typecheck e build passaram após a reorganização visual. Não foi possível repetir a verificação em navegador nesta sessão porque o módulo Playwright não está instalado/disponível; os smokes já registrados exercitam a navegação anterior, não a nova disposição visual.
 
 ### Auditoria por critério A01–A24 (2026-11-15)
 
