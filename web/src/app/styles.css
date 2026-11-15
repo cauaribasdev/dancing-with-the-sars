@@ -347,8 +347,8 @@
  .app-header > .spaceapps-brand { display:none; }
 }
 .home-hero .spaceapps-brand img { height:64px; }
-.app-header nav a[aria-current="page"] { color:var(--space-yellow); }
-.app-header nav a[aria-current="page"]::after { background:var(--space-yellow); }
+.app-header nav a[aria-current="page"] { color:var(--space-yellow); background:#17375f; }
+.app-header nav a:focus-visible { outline:2px solid var(--space-yellow); outline-offset:2px; }
 @media(max-width:640px) { .home-hero .spaceapps-brand img { height:50px; } }
 .explorer-block, .territory-heading, .daily-controls, .daily-map-status { background:var(--space-deep); border-color:#294571; }
 .map-page-panel { background:#080f23; }

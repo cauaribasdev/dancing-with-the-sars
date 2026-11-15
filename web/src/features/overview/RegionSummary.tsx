@@ -19,12 +19,12 @@ interface Props {
 
 function Facts({ s, period }: { s: CoverageSummary; period: DateWindow }) {
   const rows: [string, string][] = [
-    ["Passes", formatNumber(s.acquisitions)],
-    ["Different image strips", formatNumber(s.stacks)],
+    ["Passagens", formatNumber(s.acquisitions)],
+    ["Faixas de imagem distintas", formatNumber(s.stacks)],
   ];
-  if (s.firstDate && s.lastDate) rows.push(["First and last", formatDayRange(s.firstDate, s.lastDate)]);
-  if (s.medianGapDays != null) rows.push(["Typical gap", plural(s.medianGapDays, "day", "days")]);
-  rows.push(["Period checked", plural(daysInclusive(period), "day", "days")]);
+  if (s.firstDate && s.lastDate) rows.push(["Primeira e última", formatDayRange(s.firstDate, s.lastDate)]);
+  if (s.medianGapDays != null) rows.push(["Intervalo típico", plural(s.medianGapDays, "dia", "dias")]);
+  rows.push(["Período consultado", plural(daysInclusive(period), "dia", "dias")]);
   return (
     <dl className="grid grid-cols-[1fr_auto] gap-x-4 border-t border-rule text-[14px]">
       {rows.map(([k, v]) => (

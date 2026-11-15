@@ -127,8 +127,12 @@ describe('API', () => {
       onset: new Date(now - 50 * 60 * 60_000).toISOString(), expires: new Date(now - 24 * 60 * 60_000).toISOString(),
       municipalities: [{ code: '4304606', name: 'Canoas' }], municipalityCountTotal: 1,
     };
+    const historical: WeatherAlert = {
+      ...expired, id: 'historical', headline: 'Histórico',
+      onset: new Date(now - 96 * 60 * 60_000).toISOString(), expires: new Date(now - 72 * 60 * 60_000).toISOString(),
+    };
     const deps = testDeps([before, southern]);
-    deps.alerts = { async findAlerts() { return { alerts: [expired, active], updatedAt: new Date(now).toISOString(), source: 'live' }; } };
+    deps.alerts = { async findAlerts() { return { alerts: [historical, expired, active], updatedAt: new Date(now).toISOString(), source: 'live' }; } };
     const app = createApp(deps);
 
     const activeOnly = await get(app, '/api/regions/rs/alerts');
@@ -141,6 +145,12 @@ describe('API', () => {
 
     const recent = await get(app, '/api/regions/rs/alerts?include=recent');
     expect(recent.body.alerts.map((alert: any) => [alert.id, alert.status])).toEqual([['active', 'active'], ['expired', 'expired']]);
+
+    const history = await get(app, '/api/regions/rs/alerts?include=history');
+    expect(history.status).toBe(200);
+    expect(history.body.alerts.map((alert: any) => [alert.id, alert.status])).toEqual([
+      ['active', 'active'], ['expired', 'expired'], ['historical', 'expired'],
+    ]);
   });
 
   it('GET /api/regions/br/alerts returns nationwide municipalities and rejects macro-regions', async () => {

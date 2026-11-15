@@ -37,7 +37,7 @@ await page.route('**/api/**',async route=>{
 await page.goto('http://127.0.0.1:5173/region/sc?tab=radar&start=2026-11-01&end=2026-11-15&day=2026-11-01');
 await page.getByLabel('Exibir todas as passagens do dia',{exact:true}).click();
 await page.getByText('1/2 imagens prontas',{exact:false}).waitFor();
-await page.getByRole('button',{name:/November 2, 2026: 1 pass/}).click();
+await page.getByRole('button',{name:/2 de novembro de 2026: 1 passagem/}).click();
 await page.waitForURL(url=>url.searchParams.get('day')==='2026-11-02');
 await page.getByText('1/2 imagens prontas',{exact:false}).waitFor();
 await page.getByLabel('Exibir todas as passagens do dia',{exact:true}).click();

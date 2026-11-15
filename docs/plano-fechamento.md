@@ -4,11 +4,11 @@ Este plano transforma as pendências do inventário em entregas revisáveis. A p
 
 ## Estado de partida
 
-- Branch de trabalho: `feat/home-e-exploracao`, baseada na cadeia local de commits de redesign, navegação e composição; somente `.gitignore` está modificado antes deste plano.
-- Home, exploração nacional/estadual, Radar, comparação e história já estavam implementados. Esta execução acrescenta endpoints e integrações de INMET, IPEA e Posts, além de selos nacionais de alerta.
+- Branch de trabalho: `feat/home-e-exploracao`, baseada na cadeia local de commits de redesign, navegação e composição; a alteração preexistente em `.gitignore` foi preservada fora do commit.
+- Home, exploração nacional/estadual, Radar, comparação e história já estavam implementados. Esta execução acrescenta endpoints e integrações de INMET, IPEA e Posts, além de uma página dedicada a alertas ativos/histórico e navegação visível no cabeçalho.
 - `server/` agora inclui adaptadores CAP/WIS2 e CSV IPEA, rotas e cache; o feed de Posts deriva do catálogo existente.
-- PRs abertas #1–#4 têm dependências entre si. A cadeia local de produto ainda não está publicada.
-- Permanecem limites externos: o CSV do IPEA observado tem centenas de MB e está antigo; categorias de habitação e comunidades/favelas não são campos independentes nele. Campanhas GlobalGiving e validação Firefox/Safari não estão disponíveis.
+- PRs #1–#4 continuam abertas como dependências; a PR consolidada #5 foi publicada contra `feat/frontend-prototipo`.
+- Permanecem limites externos: o CSV do IPEA observado tem centenas de MB e está antigo; categorias de habitação e comunidades/favelas não são campos independentes nele. Campanhas GlobalGiving não estão configuradas; Safari e leitor de tela não foram validados neste ambiente.
 
 ## Princípios de aceite
 
@@ -46,7 +46,8 @@ Este plano transforma as pendências do inventário em entregas revisáveis. A p
 
 - Trocar feeds demo por hooks reais quando endpoints estiverem disponíveis, manter demo exclusivamente opt-in em dev.
 - Completar Overview (história, par, emergência), Alerts, Posts e Help com estados independentes, freshness, retry e sem dados de outro estado/período.
-- Adicionar selos nacionais de alerta a partir do endpoint `br`, agregando alertas por prefixo IBGE.
+- Criar a página `/alerts` para avisos ativos e encerrados no snapshot CAP móvel de oito dias, com filtro por estado.
+- Tornar alertas visíveis no cabeçalho e substituir as contagens circulares ambíguas sobre o mapa por um link para a página dedicada.
 - Aceite: chaves de cache completas, AbortSignal, ausência/erro/stale distintos e integração por feature documentada.
 
 ### F4 — Qualidade e acessibilidade
@@ -62,7 +63,7 @@ Este plano transforma as pendências do inventário em entregas revisáveis. A p
 - Atualizar README, rotas, inventário, aceite e instruções de deploy (API, CORS, `VITE_API_BASE`, fallback SPA e cache).
 - Executar testes, typecheck, build, smokes e validação de contratos; rever diffs por arquivo.
 - Reconciliar PRs #1–#4 e publicar a cadeia consolidada com bases existentes, sem merge automático.
-- Aceite: PRs abertas e interligadas corretamente, descrição com escopo, evidências e limitações; árvore limpa salvo alteração preexistente explicitamente mantida.
+- Aceite: PR #5 aberta e interligada à base correta, descrição inclui escopo, evidências e limitações; arquivos locais do agente permanecem fora do commit.
 
 ## Execução e dependências
 
@@ -82,6 +83,6 @@ Cada incremento será delegado pelo `./junior.sh` conforme `AGENTS.md`, em branc
 - [x] F0 baseline de comandos na branch de trabalho: testes 33 servidor + 89 web; typecheck e build passaram.
 - [x] F1 schemas Zod e especificação OpenAPI 3.1 dos três feeds; testes verificam fixtures e referências.
 - [x] F2 rotas, contratos, cache e adaptadores INMET, IPEA e Posts; 60 testes do servidor passam. A carga fria IPEA foi concluída e o cache pré-aquecido foi validado.
-- [x] F3 integração dos painéis de fonte, paginação e selos nacionais de alerta; consultas têm cache keys próprias e AbortSignal.
-- [ ] F4 smokes Chromium: home, painéis opcionais, mapa/zoom/clipping, diário, multiday e busca estadual passaram; testes automáticos totalizam 149 (60 servidor + 89 web), typecheck e build passaram. Inspeção manual de teclado/leitor de tela/contraste/foco não foi realizada; Firefox/Safari não foram validados.
-- [ ] F5 publicação das PRs.
+- [x] F3 integração dos painéis de fonte, paginação, página dedicada `/alerts` e histórico de oito dias; consultas têm cache keys próprias e AbortSignal. O cabeçalho tem link persistente e o mapa encaminha para a lista, sem círculos/contagens sobre polígonos.
+- [ ] F4 parcial: smokes Chromium para home, painéis opcionais, mapa/zoom/clipping, diário, multiday e busca estadual passaram; testes automáticos totalizam 149 (60 servidor + 89 web), typecheck e build passaram. Axe executado após hidratação em `/`, `/explore`, `/region/rs?tab=alerts` e `/compare` no Chromium e Firefox: zero violações WCAG A/AA, sem erros de página. O primeiro foco foi “Pular para o conteúdo” e a preferência `prefers-reduced-motion` foi reconhecida. Axe reportou verificações incompletas que requerem revisão humana; não foi feita auditoria com leitor de tela, Safari nem zoom do navegador. A interface própria foi traduzida para pt-BR, preservando narrativas e títulos de fonte no idioma original com indicação visível. A01–A24 não têm aceite completo.
+- [x] F5 PR #5 publicada e aberta contra `feat/frontend-prototipo`; sem merge. PRs #1–#4 permanecem abertas como dependências upstream.

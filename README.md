@@ -11,6 +11,7 @@ O repositório é um monorepo com dois workspaces npm: a **API** em `server/` (H
 
 - `/`: home com identidade Space Apps, prévias reais e acesso direto à história do RS.
 - `/explore`: mapa Brasil/estados. URLs antigas `/?region=...&month=...` continuam abrindo o mapa com filtros.
+- `/alerts?region=<estado>`: alertas ativos e histórico recente do INMET, com filtro estadual.
 - `/region/:id?tab=radar`: calendário e composição de passagens de múltiplos dias.
 - `/story/rs-flood-jul-2026` e `/compare?before=...&after=...`: história e comparação preservadas.
 

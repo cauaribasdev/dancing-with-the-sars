@@ -17,7 +17,7 @@ export function StoryMarker({ story, place, region }: { story: StoryListItem; pl
       <Link
         to={paths.story(story.id)}
         className="group flex items-center rounded-[4px] focus-visible:outline-offset-4"
-        aria-label={`Story: ${story.title}. See before and after.`}
+        aria-label={`História em inglês: ${story.title}. Ver antes e depois.`}
       >
         <span aria-hidden className="size-3.5 shrink-0 rounded-full border-2 border-ink bg-signal" />
         <span aria-hidden className="h-[2px] w-6 bg-ink" />

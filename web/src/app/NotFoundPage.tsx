@@ -5,10 +5,10 @@ import { paths } from "./paths";
 export function NotFoundPage() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 px-5 py-16">
-      <PageTitle>There is nothing at this address</PageTitle>
-      <p className="text-ink-2">The link may be incomplete. The map of Brazil is the best place to start.</p>
+      <PageTitle>Esta página não existe</PageTitle>
+      <p className="text-ink-2">O endereço pode estar incompleto. Comece pelo mapa do Brasil.</p>
       <Link to={paths.overview()} className="btn-primary self-start">
-        Open the map
+        Abrir o mapa
       </Link>
     </div>
   );

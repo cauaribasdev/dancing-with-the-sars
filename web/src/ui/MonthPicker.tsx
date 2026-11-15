@@ -35,26 +35,26 @@ function Chevron({ dir }: { dir: "left" | "right" }) {
 const stepBtn =
   "grid size-10 place-items-center rounded-[4px] border border-rule bg-sheet text-ink transition-colors hover:border-rule-strong disabled:cursor-not-allowed disabled:text-rule-strong disabled:hover:border-rule";
 
-/** Month picker: previous / list / next. From October 2025 (first data) to the current month. */
+/** Seletor de mês: anterior / lista / próximo. De outubro de 2025 (primeiro dado) até o mês atual. */
 export function MonthPicker({ months, value, customLabel, period, onChange, loading, lastDate }: Props) {
   const id = useId();
   const i = value ? months.indexOf(value) : -1;
   let prev = i > 0 ? months[i - 1] : undefined;
   let next = i >= 0 && i < months.length - 1 ? months[i + 1] : undefined;
   const isCurrent = i === months.length - 1;
-  // A period that is not a month: the arrows go to the months it starts and ends in.
+  // Um período que não é um mês: as setas vão aos meses em que ele começa e termina.
   if (!value && period.start && period.end) {
     const a = monthOf(new Date(period.start + "T00:00:00Z"));
     const b = monthOf(new Date(period.end + "T00:00:00Z"));
     prev = months.includes(a) ? a : undefined;
     next = b !== a && months.includes(b) ? b : undefined;
   }
-  const periodLabel = value ? formatMonth(value) : "the chosen period";
+  const periodLabel = value ? formatMonth(value) : "o período escolhido";
 
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-[13px] font-medium text-ink-2">
-        Month
+        Mês
       </label>
       <div className="flex items-stretch gap-1.5">
         <button
@@ -62,7 +62,7 @@ export function MonthPicker({ months, value, customLabel, period, onChange, load
           className={stepBtn}
           onClick={() => prev && onChange(prev)}
           disabled={!prev}
-          aria-label={prev ? `Previous month: ${formatMonth(prev)}` : "No earlier month with data"}
+          aria-label={prev ? `Mês anterior: ${formatMonth(prev)}` : "Não há mês anterior com dados"}
         >
           <Chevron dir="left" />
         </button>
@@ -75,7 +75,7 @@ export function MonthPicker({ months, value, customLabel, period, onChange, load
           >
             {value ? null : (
               <option value="" disabled>
-                {customLabel ?? "Choose a month"}
+                {customLabel ?? "Escolha um mês"}
               </option>
             )}
             {[...months].reverse().map((m) => (
@@ -93,7 +93,7 @@ export function MonthPicker({ months, value, customLabel, period, onChange, load
           className={stepBtn}
           onClick={() => next && onChange(next)}
           disabled={!next}
-          aria-label={next ? `Next month: ${formatMonth(next)}` : "This is the current month"}
+          aria-label={next ? `Mês seguinte: ${formatMonth(next)}` : "Este é o mês atual"}
         >
           <Chevron dir="right" />
         </button>
@@ -101,17 +101,17 @@ export function MonthPicker({ months, value, customLabel, period, onChange, load
       <div className="min-h-[38px]" aria-live="polite">
         {loading ? (
           <div className="flex flex-col gap-1.5 pt-1">
-            <ProgressBar label={`Counting passes in ${periodLabel}`} />
-            <p className="text-[13px] text-ink-2">Counting passes in {periodLabel} in NASA's catalog. This can take a few seconds.</p>
+            <ProgressBar label={`Contando passagens no ${periodLabel}`} />
+            <p className="text-[13px] text-ink-2">Contando passagens no {periodLabel} no catálogo da NASA. Isso pode levar alguns segundos.</p>
           </div>
         ) : (
           <p className="text-[13px] leading-snug text-ink-3">
-            {isCurrent ? `Month in progress: ${formatDayRange(period.start, period.end)}. ` : null}
+            {isCurrent ? `Mês em andamento: ${formatDayRange(period.start, period.end)}. ` : null}
             {lastDate === undefined
               ? null
               : lastDate
-                ? `Latest pass on record: ${formatDayShort(lastDate)}.`
-                : "No passes on record in this period."}
+                ? `Última passagem registrada: ${formatDayShort(lastDate)}.`
+                : "Sem passagens registradas neste período."}
           </p>
         )}
       </div>

@@ -151,6 +151,6 @@ Arquivos principais: `app/{Layout,router,paths,styles}`, `features/home/*`, `fea
 
 ### Limites e publicação
 
-Persistem textos legados, helpers de data e narrativas da API em inglês; a tradução integral não foi feita. Não há cobertura garantida do estado, detecção automática ou medidas calibradas a partir de prévias. Não foi validado Safari/Firefox.
+A interface própria está traduzida para pt-BR, incluindo datas, nomes regionais, calendário, detalhes das passagens e estados de imagem. Narrativas e títulos fornecidos pela API permanecem em inglês e recebem indicação explícita na história. Não há cobertura garantida do estado, detecção automática ou medidas calibradas a partir de prévias. Axe não encontrou violações WCAG A/AA nas quatro rotas auditadas em Chromium e Firefox; Safari, leitor de tela e zoom do navegador não foram validados, e o aceite A01–A24 permanece incompleto.
 
 Branch `feat/home-e-exploracao` baseada em `feat/radar-multiday`; PR consolidada proposta contra `feat/frontend-prototipo` (#3), incluindo os três commits locais anteriores de redesign e composição. PRs #1/#2/#3/#4 continuam como dependências documentadas; não houve merge. Descrição pronta em `docs/pr-home-exploracao.md`. `.gitignore` preexistente preservado e excluído do commit. `ARCHITECTURE.md` continua ignorado pela regra local `.gitignore:26`; documentação versionada está neste inventário e no plano, sem alterar ignore global.

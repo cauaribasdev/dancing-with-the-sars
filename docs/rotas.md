@@ -20,6 +20,7 @@ As rotas novas seguem as regras do CLAUDE.md:
 | Caminho | Tela | Situação |
 |---|---|---|
 | `/?month=YYYY-MM&region=<estado>` | Mapa do Brasil, estados pintados por dias com passagem | existe; seletor estadual e selos de alertas ativos |
+| `/alerts?region=<estado>` | Página dedicada a alertas ativos e histórico do INMET | existe; filtro opcional por estado |
 | `/region/:regionId?tab=<aba>&start&end&day&pass` | Painel do estado | existe como página do radar; passa a aceitar só estados e ganha as abas |
 | `/story/:storyId` | História (hoje `rs-flood-jul-2026`) | existe |
 | `/compare?before=<passId>&after=<passId>` | Antes e depois de duas passagens | existe |
@@ -41,7 +42,7 @@ Valores de `tab`: `overview` (padrão), `radar`, `alerts`, `posts`, `help`. Os p
 | `GET /regions/:id/passes?start&end` | Overview (números do radar), aba Radar |
 | `GET /regions/:id/footprints?start&end` | Aba Radar (contornos) |
 | `GET /regions/:id/pairs?start&end[&eventDate]` | Overview (mudança em destaque), aba Radar |
-| `GET /regions/:id/alerts?include=active\|recent` | Painel estadual e selos no mapa nacional |
+| `GET /regions/:id/alerts?include=active\|recent\|history` | Página dedicada, painel estadual e navegação do mapa |
 | `GET /regions/:id/organizations?areas&near&limit&cursor` | Aba Como ajudar |
 | `GET /regions/:id/posts?start&end&limit&cursor` | Aba Publicações |
 | `GET /coverage?start&end` | Mapa do Brasil |
@@ -59,7 +60,7 @@ Avisos do INMET que atingem o estado.
 | Parâmetro | Onde | Padrão | Descrição |
 |---|---|---|---|
 | `id` | caminho | — | Sigla do estado (`rs`, `sc`, ...), ou `br` para o mapa do Brasil (ver abaixo). Macrorregião devolve 400 |
-| `include` | query | `active` | `active` só os vigentes; `recent` inclui os vencidos nas últimas 48 h |
+| `include` | query | `active` | `active` só os vigentes; `recent` inclui vencidos nas últimas 48 h; `history` inclui vigentes e vencidos encontrados no snapshot CAP móvel de oito dias |
 
 ```json
 {
@@ -94,7 +95,7 @@ Avisos do INMET que atingem o estado.
 - **`municipalities`:** só os municípios **do estado pedido**. `municipalityCountTotal` é o total do alerta, em todo o Brasil. Para `br`, a lista mantém todos os municípios.
 - **Textos do INMET:** `event`, `headline`, `description` e `instruction` vêm como o INMET publicou, em português. Não traduzir nem resumir.
 - **`geometry`:** já vem em [lon, lat]. O servidor inverte o "lat,lon" do CAP.
-- **Mapa do Brasil:** o selo de alerta vem de `GET /regions/br/alerts`. É o único uso de `br`. Nessa resposta, `municipalities` traz todos os municípios do alerta, e o selo de cada estado sai desse agrupamento.
+- **Mapa do Brasil:** não desenha contagens sobre os polígonos estaduais; oferece link direto à página de alertas, onde a contagem e o histórico são legíveis e filtráveis.
 - Fonte: bucket CAP público do WIS2/INMET. O servidor consulta os últimos oito dias, limita downloads concorrentes, guarda snapshot no cache de disco por cinco minutos e responde `stale` quando a publicação mais recente passou de 24 horas ou quando usou cache antigo após falha. `updatedAt` é o `LastModified` mais recente.
 - **Município do estado:** os dois primeiros dígitos do código IBGE do município são o `ibgeCode` do estado.
 
@@ -250,4 +251,4 @@ Base: `https://mapaosc.ipea.gov.br/api/api`. O Swagger mostra `/api/...`, mas o 
 
 ## Decisões aceitas e dependências
 
-As rotas de alerts, organizations e posts estão implementadas neste branch. A aba Alerts solicitará `include=recent`; `active` continua sendo o padrão da API. Para links regionais legados sem tab, day ou pass abrem Radar; na ausência de ambos, Overview. Ver [frontend.md](frontend.md). Organizations entrega `snapshotDate`, origem, referência, paginação e status de campanhas não configuradas.
+As rotas de alerts, organizations e posts estão implementadas neste branch. A página `/alerts` solicita `include=history`; a aba estadual solicita `include=recent`; `active` continua sendo o padrão da API. O snapshot CAP cobre oito dias móveis, portanto o histórico não é arquivo permanente. Para links regionais legados sem tab, day ou pass abrem Radar; na ausência de ambos, Overview. Ver [frontend.md](frontend.md). Organizations entrega `snapshotDate`, origem, referência, paginação e status de campanhas não configuradas.

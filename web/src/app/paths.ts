@@ -3,6 +3,7 @@ import type { DateWindow } from "../api/types";
 
 export const paths = {
   home: () => "/",
+  alerts: (opts?: { region?: string }) => withQuery("/alerts", { region: opts?.region }),
   /** Overview. `month` = "YYYY-MM", `region` = selected region id. */
   overview: (opts?: { month?: string; region?: string }) =>
     withQuery("/explore", { month: opts?.month, region: opts?.region }),

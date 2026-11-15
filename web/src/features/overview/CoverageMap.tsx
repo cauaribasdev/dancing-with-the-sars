@@ -1,8 +1,10 @@
 import type { FilterSpecification } from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router";
 import { Layer, Source, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import type { CoverageResponse, Region, RegionsGeoJSON, StateCoverage, StoryListItem, StoryPlace } from "../../api/types";
 import { regionName } from "../../api/regionNames";
+import { paths } from "../../app/paths";
 import { BaseMap } from "../../map/BaseMap";
 import { BRAZIL_BBOX, bboxToBounds } from "../../map/basemapConfig";
 import { useLabelLayerId } from "../../map/layers";
@@ -23,7 +25,6 @@ interface Props {
   month: string;
   regions: Region[];
   selectedId: string;
-  alertCounts?: Record<string, number>;
   onSelect: (regionId: string) => void;
   story?: StoryListItem;
   storyPlace?: StoryPlace;
@@ -36,7 +37,7 @@ function prefersReducedMotion() {
 }
 
 /** Joins the month's coverage onto each polygon's properties (days = distinctDates). */
-function joinCoverage(geo: RegionsGeoJSON, coverage: CoverageResponse | undefined, alertCounts: Record<string, number>) {
+function joinCoverage(geo: RegionsGeoJSON, coverage: CoverageResponse | undefined) {
   const byId = new Map<string, StateCoverage>(coverage?.states.map((s) => [s.id, s]));
   return {
     ...geo,
@@ -49,7 +50,6 @@ function joinCoverage(geo: RegionsGeoJSON, coverage: CoverageResponse | undefine
           bbox: undefined, // arrays in properties become strings in MapLibre; not needed here
           days: c ? c.distinctDates : null,
           hasData: c ? 1 : 0,
-          activeAlerts: alertCounts[f.properties.id] ?? 0,
         },
       };
     }),
@@ -93,28 +93,6 @@ function CoverageLayers({
         type="line"
         beforeId={beforeId}
         paint={{ "line-color": "#52647c", "line-width": 1, "line-opacity": 0.9 }}
-      />
-      <Layer
-        id="states-active-alerts-dot"
-        type="circle"
-        beforeId={beforeId}
-        filter={[">", ["get", "activeAlerts"], 0]}
-        layout={{ visibility: selectedId === "br" ? "visible" : "none" }}
-        paint={{ "circle-color": "#a32121", "circle-radius": 10, "circle-stroke-color": "#fff", "circle-stroke-width": 2 }}
-      />
-      <Layer
-        id="states-active-alerts-count"
-        type="symbol"
-        beforeId={beforeId}
-        filter={[">", ["get", "activeAlerts"], 0]}
-        layout={{
-          visibility: selectedId === "br" ? "visible" : "none",
-          "text-field": ["to-string", ["get", "activeAlerts"]],
-          "text-size": 11,
-          "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-          "text-allow-overlap": false,
-        }}
-        paint={{ "text-color": "#fff", "text-halo-color": "#a32121", "text-halo-width": 1 }}
       />
       {/* State with no pass: dashed outline (the legend shows the same) */}
       <Layer
@@ -169,7 +147,6 @@ export function CoverageMap({
   month,
   regions,
   selectedId,
-  alertCounts = {},
   onSelect,
 
 }: Props) {
@@ -177,7 +154,7 @@ export function CoverageMap({
   const [hover, setHover] = useState<Hover | null>(null);
   const visibleGeo = useMemo(() => geo ? {...geo, features: geo.features.filter(f => selectedId === "br" || f.properties.id === selectedId)} : undefined, [geo, selectedId]);
   const territory = useMemo(() => visibleGeo?.features.map(f => f.geometry) ?? [], [visibleGeo]);
-  const data = useMemo(() => (visibleGeo ? joinCoverage(visibleGeo, coverage, alertCounts) : undefined), [visibleGeo, coverage, alertCounts]);
+  const data = useMemo(() => (visibleGeo ? joinCoverage(visibleGeo, coverage) : undefined), [visibleGeo, coverage]);
   const statesById = useMemo(() => new Map(coverage?.states.map((s) => [s.id, s])), [coverage]);
   const regionById = useMemo(() => new Map(regions.map((r) => [r.id, r])), [regions]);
 
@@ -230,8 +207,10 @@ export function CoverageMap({
       {/* Lifted above the attribution line, which spans most of the map width when expanded. */}
       <div className="absolute bottom-9 left-3 sm:left-4">
         {coverage || coverageLoading ? <CoverageLegend month={month} dimmed={coveragePending} /> : <span className="rounded bg-sheet p-2 text-ink-2 text-xs">Limites territoriais · IBGE</span>}
-        {selectedId === "br" && Object.values(alertCounts).some((count) => count > 0) ? (
-          <p className="mt-1 rounded bg-sheet/95 px-2 py-1 text-[11px] text-ink-2">Círculos vermelhos: alertas ativos por estado</p>
+        {selectedId === "br" ? (
+          <Link to={paths.alerts()} className="mt-1 inline-flex rounded bg-sheet/95 px-2 py-1 text-[11px] font-medium text-ink underline decoration-signal underline-offset-2 hover:bg-signal-wash">
+            Consultar alertas ativos e histórico ↗
+          </Link>
         ) : null}
       </div>
       {hover && hoverRegion ? (

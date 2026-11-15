@@ -61,7 +61,7 @@ export async function apiGet<T>(path: string, params?: QueryParams, signal?: Abo
     if (isErrorBody(body)) {
       throw new ApiError(body.error.code, body.error.message, res.status, body.error.issues);
     }
-    throw new ApiError("http_" + res.status, `The server answered ${res.status}.`, res.status);
+    throw new ApiError("http_" + res.status, `O servidor respondeu com erro ${res.status}.`, res.status);
   }
   return body as T;
 }

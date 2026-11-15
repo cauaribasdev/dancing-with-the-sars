@@ -8,7 +8,7 @@ import type { AlertSeverity, WeatherAlert } from '../../domain/alerts';
 import { withSource } from '../responses';
 import { validate } from '../schemas';
 
-const alertsQuery = z.object({ include: z.enum(['active', 'recent']).default('active') });
+const alertsQuery = z.object({ include: z.enum(['active', 'recent', 'history']).default('active') });
 const severityRank: Record<AlertSeverity, number> = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
 const SEVERITIES: AlertSeverity[] = ['extreme', 'severe', 'moderate', 'minor'];
 const RECENT_MS = 48 * 60 * 60 * 1000;
@@ -55,7 +55,8 @@ export function alertsRoutes(deps: Deps) {
       if (municipalities.length === 0) return [];
 
       const status: AlertItem['status'] = Date.parse(alert.expires) >= now ? 'active' : 'expired';
-      if (status === 'expired' && (include !== 'recent' || now - Date.parse(alert.expires) > RECENT_MS)) return [];
+      if (status === 'expired' && include === 'active') return [];
+      if (status === 'expired' && include === 'recent' && now - Date.parse(alert.expires) > RECENT_MS) return [];
       return [{ ...alert, municipalities, status }];
     }).sort(orderAlerts);
 

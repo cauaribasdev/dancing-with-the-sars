@@ -37,12 +37,12 @@ export function useBrowseImage(passId: string | undefined): BrowseImageState {
       (blobUrl) => {
         if (alive) setImage({ url: pngUrl, blobUrl, progress: 1 });
       },
-      (err: unknown) => {
+      () => {
         if (alive)
           setImage({
             url: pngUrl,
             progress: null,
-            error: err instanceof Error ? err.message : "Could not download the image from ASF.",
+            error: "Não foi possível baixar a imagem do arquivo ASF.",
           });
       },
     );

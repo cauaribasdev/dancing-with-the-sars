@@ -12,7 +12,7 @@
         "summary": "Weather alerts for Brazil or a state",
         "parameters": [
           { "$ref": "#/components/parameters/AlertRegionId" },
-          { "name": "include", "in": "query", "description": "Include recently expired alerts when set to recent.", "schema": { "type": "string", "enum": ["active", "recent"], "default": "active" } }
+          { "name": "include", "in": "query", "description": "active returns current alerts; recent also includes alerts expired in the last 48 hours; history returns active and expired alerts from the rolling 8-day CAP snapshot.", "schema": { "type": "string", "enum": ["active", "recent", "history"], "default": "active" } }
         ],
         "responses": {
           "200": { "description": "Alerts from INMET CAP feed.", "headers": { "X-Data-Source": { "$ref": "#/components/headers/DataSource" } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AlertsResponse" } } } },

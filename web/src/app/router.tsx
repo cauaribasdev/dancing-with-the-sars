@@ -1,5 +1,6 @@
 import { HomeEntry } from "../features/home/HomePage";
 import { createBrowserRouter } from "react-router";
+import { AlertsPage } from "../features/alerts/AlertsPage";
 import { ComparePage } from "../features/compare/ComparePage";
 import { OverviewPage } from "../features/overview/OverviewPage";
 import { StatePage } from "../features/region/StatePage";
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomeEntry /> },
       { path: "explore", element: <OverviewPage /> },
+      { path: "alerts", element: <AlertsPage /> },
       { path: "region/:regionId", element: <StatePage /> },
       { path: "story/:storyId", element: <StoryPage /> },
       { path: "compare", element: <ComparePage /> },
