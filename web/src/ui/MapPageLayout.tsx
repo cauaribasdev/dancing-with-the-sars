@@ -9,7 +9,7 @@ export function MapPageLayout({ panel, map, panelLabel }: { panel: ReactNode; ma
   return (
     <div className="flex h-full flex-col overflow-y-auto lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:overflow-hidden">
       <div className="order-1 h-[68svh] min-h-[320px] shrink-0 lg:order-2 lg:h-full">{map}</div>
-      <aside aria-label={panelLabel} className="order-2 border-rule bg-paper lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:border-r">
+      <aside aria-label={panelLabel} className="map-page-panel order-2 border-rule bg-paper lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:border-r">
         <button type="button" className="lg:hidden w-full p-3 text-left border-b border-rule" aria-expanded={controlsOpen} onClick={()=>setControlsOpen(!controlsOpen)}>Localização e filtros {controlsOpen ? "−" : "+"}</button>
         <div className={`${controlsOpen ? "block" : "hidden"} lg:block px-5 pb-8 pt-6 lg:px-6`}>{panel}</div>
       </aside>
@@ -17,10 +17,10 @@ export function MapPageLayout({ panel, map, panelLabel }: { panel: ReactNode; ma
   );
 }
 
-/** Page title: expanded Archivo, the only place the typeface widens. */
+/** Shared title using the application typeface. */
 export function PageTitle({ children }: { children: ReactNode }) {
   return (
-    <h1 className="text-[28px] font-[680] leading-[1.08] tracking-[-0.015em] text-balance text-ink" style={{ fontStretch: "118%" }}>
+    <h1 className="text-[28px] font-[680] leading-[1.08] tracking-[-0.015em] text-balance text-ink">
       {children}
     </h1>
   );

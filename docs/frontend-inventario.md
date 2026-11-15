@@ -123,3 +123,34 @@ Branch local `feat/radar-multiday`, sobre `feat/radar-diario-e-navegacao`.
 - Qwen: 2 tarefas delegadas e aproveitadas (`imageSelection.ts` e checkboxes de `PassList.tsx`), sem tarefas assumidas após falhas. Codex escreveu os testes prévios, integração de estado/URL e ajustou a guarda opcional dos checkboxes durante revisão. Duas invocações reais de junior.sh; tarefas em `tasks/frontend/{multiday-selection,pass-selection-checkboxes}.md`.
 - Validação: 84 testes unitários aprovados em 12 arquivos; build TypeScript/Vite aprovado; diff check aprovado. Smoke Chromium de múltiplos dias cobre acumulação, reload, limpeza, adicionar período, checkbox individual e limpeza ao trocar estado. Smoke diário anterior também passou, incluindo detalhes/download e imagem sem georef. Fixtures do smoke são sintéticas, não cobertura real do estado. Screenshot inspecionado visualmente.
 - Sem alterações backend/dependências, sem publicação ou merge. `.gitignore` preexistente preservado.
+
+## Home, composição temporal e identidade Space Apps — 2026-11-15
+
+Plano incremental: [plano-home-exploracao.md](plano-home-exploracao.md), H1–H6, relacionado a M1/M2/M3/M5. Não conclui as pendências de contratos/backend do plano original.
+
+- **H1/H2:** home em `/`, explorador em `/explore`; URLs antigas da raiz com query redirecionam preservando parâmetros e fragmento. História RS e mapa em um clique. Prévia antes/depois usa o primeiro par destacado retornado pela API e carrega imagens reais com datas UTC. Erro/vazio mantém navegação; sem estatísticas ou imagens de desastres inventadas.
+- **H3:** composição explicitamente identificada como múltiplas datas, lista aberta com IDs/datas/ordem e remoção. Ordenação temporal independente da ordem lexical dos IDs; MapLibre reconcilia ordem real das camadas após downloads assíncronos. Mantidos seleção multiday, reload, transparência, recorte e exclusão de georef inadequada.
+- **H4:** cabeçalho e textos próprios dos detalhes de passagem em português, atalho “Comparar com outra data” preserva pares compatíveis. Alertas/organizações complementares recolhidos na visão geral, acessíveis nas abas existentes. Não removidos serviços indisponíveis nem inventados dados para preenchê-los.
+- **H6:** logos oficiais 2026 intactos, Overpass local e paleta Space Apps no shell, home, painéis e componentes comuns. Hero com gradiente azul, amarelo pontual em rótulos/estado ativo; mapas mantêm a rampa de cobertura e dados originais. Guia e atribuições em `web/public/brand/README.md`; licença da fonte incluída. Nenhuma nova dependência npm.
+
+### Origem e revisão
+
+4 tarefas delegadas, 3 concluídas pelo Qwen (`DataSources`, `compositionOrder`, `SpaceAppsBrand`), 1 assumida pelo Codex (`PassDetails`) após dois retornos de revisão sem resultado aprovado. Foram 7 invocações reais de `junior.sh`, contando correções: fontes 2, ordem 1, detalhes 3, marca 1. Última execução de detalhes terminou com código 143; não é contada como sucesso. Codex corrigiu os termos restantes e o atalho após os retornos; validação posterior independente aprovada. Tarefas e feedback em `tasks/frontend/`.
+
+Codex: design da home e tema, integração de rotas/camadas, correção de min-width mobile e altura do shell, testes prévios de rotas/ordenação, teste de renderização de detalhes, smokes, documentação e revisão por diff. Nenhuma implementação backend.
+
+Arquivos principais: `app/{Layout,router,paths,styles}`, `features/home/*`, `features/region/{RegionPage,RegionMap,PassDetails,StatePage,compositionOrder}`, `ui/{SpaceAppsBrand,MapPageLayout}`, `public/brand/*`, `index.html`, `main.tsx`. Testes e scripts correspondentes em `web/src` e `web/scripts`.
+
+### Validação
+
+- `npm test -w web`: **89 testes / 15 arquivos aprovados** (baseline anterior: 84/12).
+- `npm run build`: TypeScript e Vite aprovados. Nenhum comando de lint inventado.
+- Home em Chromium: imagens reais servidas pela API/ASF, logos e fonte locais, navegação por teclado à história, mapa, URL antiga com região/mês, desktop 1440px e mobile 390/320px sem rolagem horizontal. Falha e ausência de pares exercitadas com respostas sintéticas identificadas no script.
+- Smokes de seleção de estados, composição diária, multiday e recorte territorial aprovados; dados desses testes são sintéticos, limites IBGE do repositório. Teste de recorte inclui raster atravessando polígono côncavo/furo. Não equivale a auditoria científica nem cross-browser.
+- Capturas inspecionadas: `artifacts/home/*` e mapas atualizados em `artifacts/redesign/*`. Imagens da home são reais; capturas do smoke territorial não representam ocorrências reais.
+
+### Limites e publicação
+
+Persistem textos legados, helpers de data e narrativas da API em inglês; a tradução integral não foi feita. Não há cobertura garantida do estado, detecção automática ou medidas calibradas a partir de prévias. Não foi validado Safari/Firefox.
+
+Branch `feat/home-e-exploracao` baseada em `feat/radar-multiday`; PR consolidada proposta contra `feat/frontend-prototipo` (#3), incluindo os três commits locais anteriores de redesign e composição. PRs #1/#2/#3/#4 continuam como dependências documentadas; não houve merge. Descrição pronta em `docs/pr-home-exploracao.md`. `.gitignore` preexistente preservado e excluído do commit. `ARCHITECTURE.md` continua ignorado pela regra local `.gitignore:26`; documentação versionada está neste inventário e no plano, sem alterar ignore global.

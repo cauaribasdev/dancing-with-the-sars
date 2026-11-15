@@ -5,7 +5,16 @@ Projeto para o **NASA Space Apps Challenge 2026**, desafio
 um mapa interativo do Brasil para explorar as passagens do radar **NISAR** (NASA-ISRO) e
 comparar o antes e o depois de mudanças na superfície. A primeira história é a **cheia de julho de 2026 no Rio Grande do Sul**.
 
-O repositório é um monorepo com dois workspaces npm: a **API** em `server/` (Hono) e o **site** em `web/` (Vite + React + MapLibre). A interface do site é em inglês; veja [`web/README.md`](web/README.md) e [`web/DESIGN.md`](web/DESIGN.md).
+O repositório é um monorepo com dois workspaces npm: a **API** em `server/` (Hono) e o **site** em `web/` (Vite + React + MapLibre). A home e os principais controles são em português; alguns textos legados e narrativas da API permanecem em inglês; veja [`web/README.md`](web/README.md) e [`web/DESIGN.md`](web/DESIGN.md).
+
+## Entrada e exploração
+
+- `/`: home com identidade Space Apps, prévias reais e acesso direto à história do RS.
+- `/explore`: mapa Brasil/estados. URLs antigas `/?region=...&month=...` continuam abrindo o mapa com filtros.
+- `/region/:id?tab=radar`: calendário e composição de passagens de múltiplos dias.
+- `/story/rs-flood-jul-2026` e `/compare?before=...&after=...`: história e comparação preservadas.
+
+Plano deste incremento: [home e exploração](docs/plano-home-exploracao.md). Rastreabilidade: [inventário frontend](docs/frontend-inventario.md).
 
 ## Rodando
 

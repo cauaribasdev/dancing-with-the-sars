@@ -251,6 +251,14 @@ export function RegionMap({
       initialBbox={bbox}
       initialPadding={region?.kind === "state" ? 48 : 24}
       interactiveLayerIds={footprints ? [FILL_LAYER] : []}
+      onIdle={() => {
+        // Image downloads finish out of order. Reconcile actual WebGL stacking once idle.
+        const map = mapRef.current?.getMap();
+        if (!map || !map.getLayer(SELECTED_CASING_LAYER)) return;
+        const desired = dailyPassIds.map(id=>`daily-${id}-layer`).filter(id=>map.getLayer(id));
+        const actual = map.getStyle().layers.map(layer=>layer.id).filter(id=>desired.includes(id));
+        if (actual.join('|') !== desired.join('|')) desired.forEach(id=>map.moveLayer(id, SELECTED_CASING_LAYER));
+      }}
       onClick={onClick}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}

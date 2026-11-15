@@ -43,6 +43,8 @@ await page.getByText('1/2 imagens prontas',{exact:false}).waitFor();
 await page.getByLabel('Exibir todas as passagens do dia',{exact:true}).click();
 await page.getByText('2/3 imagens prontas',{exact:false}).waitFor();
 assert.equal(new URL(page.url()).searchParams.getAll('image').length,3);
+assert.deepEqual(await page.locator('.daily-controls ol small').allTextContents(), ['synthetic-1','synthetic-3','synthetic-2']);
+await page.getByRole('heading',{name:'Imagens de múltiplas datas'}).waitFor();
 await page.reload();
 await page.getByText('2/3 imagens prontas',{exact:false}).waitFor();
 await page.getByRole('button',{name:'Limpar imagens',exact:true}).click();

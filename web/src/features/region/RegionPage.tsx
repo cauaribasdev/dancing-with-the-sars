@@ -18,6 +18,7 @@ import { DayCalendar } from "./DayCalendar";
 import { PassDetails } from "./PassDetails";
 import { PassList } from "./PassList";
 import { RegionMap } from "./RegionMap";
+import { orderComposition } from "./compositionOrder";
 import { mergeImageSelection } from "./imageSelection";
 import { resolvePeriod } from "./regionLogic";
 import { useStackNeighbors } from "./useStackNeighbors";
@@ -81,7 +82,7 @@ export function RegionPage() {
   const allowedImageIds = periodPasses.map(p=>p.id);
   const dayImageIds = periodPasses.filter(p=>p.date===selectedDay).map(p=>p.id);
   const compositeMode = params.get("images") === "selection" || params.get("images") === "day";
-  const dailyPassIds = params.get("images") === "day" ? dayImageIds.slice().sort() : mergeImageSelection(params.getAll("image"), [], allowedImageIds);
+  const dailyPassIds = orderComposition(params.get("images") === "day" ? dayImageIds : params.getAll("image"), periodPasses);
   const showDayImages = !!selectedDay && dayImageIds.length > 0 && dayImageIds.every(id=>dailyPassIds.includes(id));
   const [dailyOpacity,setDailyOpacity] = useState(0.65);
   const image = useBrowseImage(compositeMode ? undefined : selectedPass?.id);
@@ -204,6 +205,8 @@ export function RegionPage() {
         {regions.data && !region ? <p className="text-ink-2">This region does not exist. Go back to the map and pick one.</p> : null}
       </header>
       <section className="daily-controls" aria-label="Composição de imagens">
+        <h2>Imagens de múltiplas datas</h2>
+        <p>Esta composição reúne aquisições em momentos diferentes, não uma observação simultânea do estado.</p>
         <label><input type="checkbox" checked={showDayImages} disabled={!dayImageIds.length || pending} onChange={e=>{
           const enabled=e.currentTarget.checked;
           updateImages(enabled ? mergeImageSelection(dailyPassIds,dayImageIds,allowedImageIds) : dailyPassIds.filter(id=>!dayImageIds.includes(id)));
@@ -214,7 +217,7 @@ export function RegionPage() {
         <button type="button" disabled={pending || !periodPasses.length} onClick={()=>{updateImages(allowedImageIds);if(region)setFocus(f=>({bbox:region.bbox,n:(f?.n??0)+1}));}}>Adicionar todas do período ({periodPasses.length})</button>
         {dailyPassIds.length > 0 && <button type="button" onClick={()=>updateImages([])}>Limpar imagens</button>}
         {selectedPass && <button type="button" disabled={pending} onClick={()=>updateImages(dailyPassIds.includes(selectedPass.id)?dailyPassIds.filter(id=>id!==selectedPass.id):[...dailyPassIds,selectedPass.id])}>{dailyPassIds.includes(selectedPass.id)?'Remover esta passagem da composição':'Adicionar esta passagem à composição'}</button>}
-        {dailyPassIds.length > 0 && <details><summary>{dailyPassIds.length} imagens na composição</summary><ul>{dailyPassIds.map(id=>{const pass=passesById.get(id);return <li key={id}><span>{pass?.date} · {pass?.start.slice(11,16)} UTC</span><button type="button" aria-label={`Remover imagem ${id}`} onClick={()=>updateImages(dailyPassIds.filter(selected=>selected!==id))}>Remover</button></li>;})}</ul></details>}
+        {dailyPassIds.length > 0 && <details open><summary>{dailyPassIds.length} imagens na composição</summary><p>Ordem de desenho: da mais antiga à mais recente. As mais recentes ficam sobre as anteriores quando disponíveis.</p><ol>{dailyPassIds.map((id,index)=>{const pass=passesById.get(id);return <li key={id}><span>{index+1}. {pass?.date} · {pass?.start.slice(11,16)} UTC<small className="block break-all text-ink-3">{id}</small></span><button type="button" aria-label={`Remover imagem ${id}`} onClick={()=>updateImages(dailyPassIds.filter(selected=>selected!==id))}>Remover</button></li>;})}</ol></details>}
         {compositeMode && <><p>{dailyPassIds.length} passagens selecionadas. Áreas sobrepostas são combinadas por transparência; não representam detecção de mudança.</p><label>Opacidade das imagens: {Math.round(dailyOpacity*100)}%<input type="range" min="0.1" max="1" step="0.05" value={dailyOpacity} onChange={e=>setDailyOpacity(Number(e.target.value))}/></label></>}
       </section>
       {body}

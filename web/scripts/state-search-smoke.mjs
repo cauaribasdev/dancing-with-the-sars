@@ -19,7 +19,7 @@ await page.route('**/api/**',async route=>{
  else {await route.fulfill({status:503,json:{error:{code:'upstream_unavailable',message:'Fixture de indisponibilidade'}}});return;}
  await route.fulfill({json:data});
 });
-await page.goto('http://127.0.0.1:5173');
+await page.goto('http://127.0.0.1:5173/explore');
 await page.getByLabel('Buscar estado').fill('sao');
 await page.getByRole('button',{name:'São Paulo (SP)',exact:true}).click();
 await page.waitForURL('**region=sp');
@@ -33,7 +33,7 @@ await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('
 await page.getByRole('navigation',{name:'Seções do estado'}).getByRole('link',{name:/Alertas/}).click();
 await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('tab')==='alerts');
 await page.getByRole('link',{name:'← Mapa de Santa Catarina',exact:true}).click();
-await page.waitForURL(url=>url.pathname==='/' && url.searchParams.get('region')==='sc');
+await page.waitForURL(url=>url.pathname==='/explore' && url.searchParams.get('region')==='sc');
 await page.getByRole('link',{name:'Abrir Radar de SC'}).waitFor();
 await page.screenshot({path:'/tmp/sars-sidebar-ux.png'});
 await page.getByLabel('Buscar estado').fill('zzzzz');

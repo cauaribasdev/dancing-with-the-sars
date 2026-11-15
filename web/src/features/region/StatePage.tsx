@@ -48,9 +48,9 @@ function RadarSummary({id,window}: {id:string;window:{start:string;end:string}})
  const passes=useRegionPasses(id,window); const pairs=useRegionPairs(id,window);
  const summary=passes.isPlaceholderData ? undefined : passes.data?.summary;
  const pair=pairs.isPlaceholderData ? undefined : [...(pairs.data?.pairs??[])].sort((a,b)=>b.after.date.localeCompare(a.after.date)||b.before.date.localeCompare(a.before.date)||a.stackId.localeCompare(b.stackId)||a.before.id.localeCompare(b.before.id)||a.after.id.localeCompare(b.after.id))[0];
- return <><h1>Overview</h1>{passes.isPending && <p role="status">Carregando radar…</p>}{passes.error && <p role="alert">{describeError(passes.error)} <button onClick={()=>passes.refetch()}>Tentar novamente</button></p>}{passes.data?.dataSource==='stale' && <p>Dados desatualizados.</p>}{summary && <p>{summary.acquisitions} passagens · {summary.distinctDates} dias · intervalo típico: {summary.medianGapDays===null?'Dados insuficientes':`${summary.medianGapDays} dias`}</p>}
+ return <><h1>Visão geral</h1>{passes.isPending && <p role="status">Carregando radar…</p>}{passes.error && <p role="alert">{describeError(passes.error)} <button onClick={()=>passes.refetch()}>Tentar novamente</button></p>}{passes.data?.dataSource==='stale' && <p>Dados desatualizados.</p>}{summary && <p>{summary.acquisitions} passagens · {summary.distinctDates} dias · intervalo típico: {summary.medianGapDays===null?'Dados insuficientes':`${summary.medianGapDays} dias`}</p>}
  {pairs.error ? <p>Comparações indisponíveis. <button onClick={()=>pairs.refetch()}>Tentar novamente</button></p> : pairs.isPending ? <p>Carregando comparações…</p> : pair ? <Link to={paths.compare(pair.before.id,pair.after.id)}>Comparar {pair.before.date} e {pair.after.date}</Link> : <p>Nenhum par disponível.</p>}
- <SourcePanel id={id} feature="alerts" window={window}/><SourcePanel id={id} feature="help" window={window}/></>;
+ <details className="sidebar-disclosure"><summary>Informações complementares: alertas e organizações</summary><SourcePanel id={id} feature="alerts" window={window}/><SourcePanel id={id} feature="help" window={window}/></details></>;
 }
 interface Feed {
  dataSource?: string;

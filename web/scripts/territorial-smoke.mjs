@@ -23,7 +23,7 @@ await page.route('**/api/**',async route=>{
  else {await route.fulfill({status:503,json:{error:{code:'upstream_unavailable',message:'Fixture de indisponibilidade'}}});return;}
  await route.fulfill({json:data});
 });
-await page.goto('http://127.0.0.1:5173');
+await page.goto('http://127.0.0.1:5173/explore');
 await page.waitForTimeout(2500);
 await page.screenshot({path:'artifacts/redesign/brasil-desktop.png'});
 const nationalClip=await page.locator('canvas').first().evaluate(el=>el.style.clipPath);

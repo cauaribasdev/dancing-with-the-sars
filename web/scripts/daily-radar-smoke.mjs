@@ -42,8 +42,8 @@ assert.equal(await page.getByLabel('Exibir todas as passagens do dia',{exact:tru
 await page.getByText('1 indisponíveis',{exact:false}).waitFor();
 assert.match(page.url(),/images=selection/);
 await page.getByRole('button',{name:/01:00 UTC/}).click();
-await page.getByRole('link',{name:'Download it',exact:true}).waitFor();
-assert.equal(await page.getByRole('link',{name:'Download it',exact:true}).getAttribute('href'),'https://example.test/download/1');
+await page.getByRole('link',{name:'Baixar produto',exact:true}).waitFor();
+assert.equal(await page.getByRole('link',{name:'Baixar produto',exact:true}).getAttribute('href'),'https://example.test/download/1');
 await page.getByText('2/3 imagens prontas',{exact:false}).waitFor();
 await page.screenshot({path:'/tmp/sars-daily-radar.png',fullPage:true});
 await page.getByLabel('Exibir todas as passagens do dia',{exact:true}).click();
