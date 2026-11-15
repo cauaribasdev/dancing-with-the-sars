@@ -35,6 +35,27 @@ await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('
 await page.getByRole('link',{name:'← Mapa de Santa Catarina',exact:true}).click();
 await page.waitForURL(url=>url.pathname==='/explore' && url.searchParams.get('region')==='sc');
 await page.getByRole('link',{name:'Abrir Radar de SC'}).waitFor();
+await page.getByRole('link',{name:'Abrir Radar de SC'}).click();
+await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('tab')==='radar');
+await page.goBack();
+await page.waitForURL(url=>url.pathname==='/explore' && url.searchParams.get('region')==='sc');
+await page.goForward();
+await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('tab')==='radar');
+await page.reload();
+await page.getByRole('navigation',{name:'Seções do estado'}).getByRole('link',{name:/Radar/}).waitFor();
+for(const invalid of ['/region/br','/region/norte','/region/xx']) {
+ await page.goto('http://127.0.0.1:5173'+invalid);
+ await page.getByRole('heading',{name:'Esta página não existe'}).waitFor();
+ await page.getByRole('link',{name:'Abrir o mapa'}).click();
+ await page.waitForURL('**/explore');
+}
+for(const [legacy,tab] of [['/region/sc?pass=legacy-pass','radar'],['/region/sc?day=2026-11-02','radar'],['/region/sc','overview']]) {
+ await page.goto('http://127.0.0.1:5173'+legacy);
+ await page.waitForURL(url=>url.pathname==='/region/sc' && url.searchParams.get('tab')===tab);
+ assert.equal(new URL(page.url()).searchParams.get('tab'),tab);
+}
+await page.goto('http://127.0.0.1:5173/explore?region=sc');
+await page.waitForURL('**/explore?region=sc');
 await page.screenshot({path:'/tmp/sars-sidebar-ux.png'});
 await page.getByLabel('Buscar estado').fill('zzzzz');
 assert.equal(await page.getByText('Nenhum estado encontrado.').count(),1);

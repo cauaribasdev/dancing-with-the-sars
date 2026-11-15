@@ -82,7 +82,40 @@ Cada incremento será delegado pelo `./junior.sh` conforme `AGENTS.md`, em branc
 - [x] F0 inspeção inicial e registro do plano.
 - [x] F0 baseline de comandos na branch de trabalho: testes 33 servidor + 89 web; typecheck e build passaram.
 - [x] F1 schemas Zod e especificação OpenAPI 3.1 dos três feeds; testes verificam fixtures e referências.
-- [x] F2 rotas, contratos, cache e adaptadores INMET, IPEA e Posts; 60 testes do servidor passam. A carga fria IPEA foi concluída e o cache pré-aquecido foi validado.
+- [x] F2 rotas, contratos, cache e adaptadores INMET, IPEA e Posts; 62 testes do servidor passam. A carga fria IPEA foi concluída e o cache pré-aquecido foi validado.
 - [x] F3 integração dos painéis de fonte, paginação, página dedicada `/alerts` e histórico de oito dias; consultas têm cache keys próprias e AbortSignal. O cabeçalho tem link persistente e o mapa encaminha para a lista, sem círculos/contagens sobre polígonos.
-- [ ] F4 parcial: smokes Chromium para home, painéis opcionais, mapa/zoom/clipping, diário, multiday, busca estadual e a página `/alerts` passaram (esta última com API interceptada e fixtures); testes automáticos totalizam 149 (60 servidor + 89 web), typecheck e build passaram. Axe executado após hidratação em `/`, `/explore`, `/region/rs?tab=alerts`, `/compare` e `/alerts` no Chromium e Firefox: zero violações WCAG A/AA, sem erros de página. O primeiro foco foi “Pular para o conteúdo” e a preferência `prefers-reduced-motion` foi reconhecida. Axe reportou verificações incompletas que requerem revisão humana; não foi feita auditoria com leitor de tela, Safari nem zoom do navegador. A interface própria foi traduzida para pt-BR, preservando narrativas e títulos de fonte no idioma original com indicação visível. A01–A24 não têm aceite completo.
+- [ ] F4 parcial: 153 testes (62 servidor + 91 web), typecheck e build passam. Smokes Chromium com fixtures para busca estadual, radar diário, composição multiday, recorte territorial e `/alerts` passaram. O smoke da home foi repetido, mas expirou após 120 s aguardando as imagens externas; o endpoint ASF respondeu aos headers, porém o corpo de 5,2 MB não concluiu em 35 s no Chromium. Essa repetição não confirma a jornada da home nesta execução. Axe em `/alerts` no Chromium e Firefox: zero violações WCAG A/AA; nas quatro rotas anteriores (`/`, `/explore`, `/region/rs?tab=alerts`, `/compare`) há evidência registrada no inventário. Primeiro foco “Pular para o conteúdo”; `prefers-reduced-motion` reconhecido. Ainda não houve revisão com leitor de tela, Safari ou zoom; A01–A24 não têm aceite completo.
 - [x] F5 PR #5 publicada e aberta contra `feat/frontend-prototipo`; sem merge. PRs #1–#4 permanecem abertas como dependências upstream.
+
+### Auditoria por critério A01–A24 (2026-11-15)
+
+O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificação original; esta tabela registra evidência encontrada nesta branch. “Parcial” significa que a jornada tem cobertura relacionada, mas não cobre todos os passos/ambientes do critério.
+
+| Critério | Status atual | Evidência / lacuna concreta |
+|---|---|---|
+| A01 | Parcial | Smokes territorial e busca cobrem escolha por lista; não há verificação explícita do clique em polígono do mapa. |
+| A02 | Verificado por smoke | `state-search-smoke.mjs` abre `br`, macrorregião e UF desconhecida; cada caminho mostra página não encontrada e volta ao mapa. |
+| A03 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem links sem `tab` com `day`/`pass`, normalizados para Radar. |
+| A04 | Verificado por unidade + smoke | O smoke abre `/region/sc` sem parâmetros, confirma Overview e normalização de URL/período. |
+| A05 | Parcial | `navigation.test.ts` testa aba e período inválidos, aviso e limpeza da seleção; falta E2E de URL. |
+| A06 | Parcial | Multiday verifica recarga/seleção; falta Browser Back entre abas e restauração completa por jornada. |
+| A07 | Parcial | Multiday verifica limpeza e troca de UF; não cobre troca de período por todos os caminhos da interface. |
+| A08 | Aberto | Sem teste de duas respostas concluindo em ordem inversa para a mesma tela. |
+| A09 | Parcial | `pairs.test.ts` confirma `medianGapDays: null` com zero ou uma data; falta validar a mensagem no Overview. |
+| A10 | Parcial | `pairs.test.ts` confirma ausência de par e desempate estável por stack; falta validar a mensagem visual no Overview. |
+| A11 | Aberto | Comparação incompatível ainda requer inspeção de interface. |
+| A12 | Parcial | `browseImage.test.ts` cobre georef nula/baixa; smoke diário confirma exclusão visual, mas falta inspecionar detalhes em estado de erro. |
+| A13 | Aberto | Imagem/WebGL indisponível exige inspeção visual/teclado; não revalidado nesta execução. |
+| A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias e ativos/histórico preenchidos. |
+| A15 | Verificado por smoke | `alerts-smoke.mjs` injeta INMET 503, confirma retry e navega ao Radar estadual com os demais endpoints funcionais. |
+| A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
+| A17 | Verificado em unidade + smoke | Expiração muda de ativo para histórico com relógio do navegador avançado, sem novo fetch. |
+| A18 | Parcial | Helpers e contrato cobrem UTC; falta verificar visualmente a virada do dia na interface de alertas. |
+| A19 | Parcial | `/alerts` mostra aviso stale específico do INMET no smoke; outras seções ainda não têm falha-com-cache verificada via browser. |
+| A20 | Parcial | `alerts-smoke.mjs` confirma que mudar UF limpa os avisos da UF anterior; falta simular duas respostas simultâneas fora de ordem. |
+| A21 | Parcial | Contratos e rota cobrem vazios/erros; falta smoke da interface Help distinguindo os dois estados. |
+| A22 | Aberto | Sem smoke de campanhas vazias na interface. |
+| A23 | Aberto | Distância de referência durante pan/zoom requer inspeção manual. |
+| A24 | Parcial | `/alerts` smoke usa teclado, expansão de texto e viewport 320 px; demais larguras e leitor de tela não foram inspecionados. |
+
+O smoke territorial passou após restringir o seletor à navegação “Seções do estado”; o seletor anterior se tornou ambíguo com o link global “Alertas”.

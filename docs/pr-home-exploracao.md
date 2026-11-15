@@ -18,16 +18,17 @@ Esta PR consolidada depende da PR #3 (`feat/frontend-prototipo`, por sua vez sob
 
 ## Validação
 
-- 60 testes servidor / 12 arquivos e 89 testes frontend / 15 arquivos aprovados; typecheck e build TypeScript + Vite aprovados.
+- 62 testes servidor / 12 arquivos e 91 testes frontend / 16 arquivos aprovados; typecheck e build TypeScript + Vite aprovados.
 - Chromium: home com imagens reais, logos, estados de erro/vazio, teclado, links antigos, desktop e mobile 320/390px; painéis opcionais com respostas controladas em 320px.
-- Smokes sintéticos: busca/seleção estadual, imagens diárias, multiday, reload, troca de estado e recorte raster/vetorial atravessando limites/furos.
+- Smokes sintéticos: busca/seleção estadual, imagens diárias, multiday, reload, troca de estado e recorte raster/vetorial atravessando limites/furos. `web/scripts/alerts-smoke.mjs` cobre teclado, alertas vazios/preenchidos/stale, detalhe oficial, expiração local, retry isolado com Radar funcional, troca de UF sem dados antigos e 320 px.
 - INMET consultado ao vivo: endpoint estadual RS respondeu 200 com 4 alertas ativos; timezone CAP foi normalizado para UTC.
-- `/alerts` apresenta alertas ativos e encerrados no snapshot CAP móvel de oito dias, filtra por estado e está ligado no cabeçalho; o mapa não sobrepõe círculos e contagens aos polígonos estaduais. Smoke Chromium com respostas INMET sintéticas confirmou navegação, duas listas, filtro/URL e layout sem overflow a 320 px.
-- Axe em Chromium e Firefox, depois da hidratação, nas rotas `/`, `/explore`, `/region/rs?tab=alerts` e `/compare`: nenhuma violação WCAG A/AA. Smoke da home repetido após a tradução; link de salto recebeu o primeiro foco.
+- `/alerts` apresenta alertas ativos e encerrados no snapshot CAP móvel de oito dias, filtra por estado e está ligado no cabeçalho; o mapa não sobrepõe círculos e contagens aos polígonos estaduais.
+- Axe em Chromium e Firefox, depois da hidratação, nas rotas `/`, `/explore`, `/region/rs?tab=alerts`, `/compare` e `/alerts`: nenhuma violação WCAG A/AA. A nova página corrigiu contraste de texto; smoke verifica primeiro foco, tecla Enter e resumo expansível.
+- Repetição atual do smoke home expirou após 120 s aguardando as imagens ASF. O endpoint browse respondeu HTTP 200 aos headers, mas o corpo de 5,2 MB não concluiu em 35 s no Chromium; o teste anterior bem-sucedido de previews reais permanece registrado, sem reprodução nesta execução.
 - Capturas em `artifacts/home/` e `artifacts/redesign/`.
 
 ## Limitações
 
-O arquivo geral do IPEA tem cerca de 344 MB e sua primeira carga exige warm-up/cache persistente; o snapshot verificado é de agosto de 2026 e recebe marca stale. O CSV não tem categorias separadas para habitação ou comunidades/favelas nem id interno de perfil. Campanhas GlobalGiving não estão configuradas. Composições misturam datas e não garantem cobertura integral; prévias não são medidas calibradas. Narrativas e títulos das fontes permanecem no idioma original e são identificados como inglês. Interface própria traduzida para pt-BR. Testado em Chromium e Firefox; axe não encontrou violações WCAG A/AA nas quatro rotas auditadas. Permanecem pendentes Safari, leitor de tela, zoom e revisão manual dos resultados incompletos do axe.
+O arquivo geral do IPEA tem cerca de 344 MB e sua primeira carga exige warm-up/cache persistente; o snapshot verificado é de agosto de 2026 e recebe marca stale. O CSV não tem categorias separadas para habitação ou comunidades/favelas nem id interno de perfil. Campanhas GlobalGiving não estão configuradas. Composições misturam datas e não garantem cobertura integral; prévias não são medidas calibradas. Narrativas e títulos das fontes permanecem no idioma original e são identificados como inglês. Interface própria traduzida para pt-BR. Testado em Chromium e Firefox; axe não encontrou violações WCAG A/AA nas cinco rotas auditadas. Permanecem pendentes Safari, leitor de tela, zoom e revisão manual dos resultados incompletos do axe; o critério A01–A24 segue parcialmente aberto.
 
 Plano e rastreabilidade: `docs/plano-fechamento.md`, `docs/frontend-inventario.md`. PR alvo: base `feat/frontend-prototipo`; publicar sem merge.

@@ -1,12 +1,14 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router";
 import { apiGet, describeError } from "../../api/client";
 import type { AlertsResponse, AlertSeverity, WeatherAlert } from "../../api/types";
 import { useRegions } from "../../api/hooks";
 import { paths } from "../../app/paths";
-import { ErrorMessage, ProgressBar, StaleNotice } from "../../ui/feedback";
+import { ErrorMessage, ProgressBar } from "../../ui/feedback";
 import { PageTitle, SectionTitle } from "../../ui/MapPageLayout";
 import { formatNumber } from "../../ui/format";
+import { splitAlertsByCurrentStatus } from "./alertState";
 
 const severityLabel: Record<AlertSeverity, string> = {
   extreme: "Extremo",
@@ -27,6 +29,11 @@ function formatTimestamp(value: string): string {
 }
 
 export function AlertsPage() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [search, setSearch] = useSearchParams();
   const regionId = search.get("region") ?? "br";
   const regions = useRegions("state");
@@ -39,8 +46,7 @@ export function AlertsPage() {
   });
 
   const alerts = query.data?.alerts ?? [];
-  const active = alerts.filter((alert) => alert.status === "active");
-  const history = alerts.filter((alert) => alert.status === "expired");
+  const { active, history } = splitAlertsByCurrentStatus(alerts, now);
   const regionName = regionId === "br"
     ? "Brasil"
     : regions.data?.find((region) => region.id === regionId)?.name ?? regionId.toUpperCase();
@@ -90,7 +96,9 @@ export function AlertsPage() {
         <span><strong className="text-ink">{formatNumber(active.length)}</strong> ativos em {regionName}</span>
         <span><strong className="text-ink">{formatNumber(history.length)}</strong> encerrados no histórico</span>
         {query.data ? <span>Fonte consultada em {formatTimestamp(query.data.updatedAt)}</span> : null}
-        <StaleNotice dataSource={query.data?.dataSource} />
+        {query.data?.dataSource === "stale" ? (
+          <span role="status">O catálogo do INMET não respondeu agora. Estes avisos vêm da última cópia salva e podem estar desatualizados.</span>
+        ) : null}
       </div>
 
       {query.isPending ? <ProgressBar label="Carregando alertas e histórico" /> : null}
