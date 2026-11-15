@@ -27,6 +27,12 @@ try {
     if (!url.pathname.startsWith("/api/")) return route.continue();
     if (url.pathname === "/api/regions") return route.fulfill({ json: { regions } });
     if (["/api/regions/br/alerts", "/api/regions/rs/alerts"].includes(url.pathname)) {
+      if (url.pathname.endsWith("/br/alerts") && url.searchParams.get("include") === "history") {
+        return route.fulfill({ json: {
+          dataSource: "cache", region: { id: "br", kind: "country", code: "BR", name: "Brasil" }, updatedAt: "2026-11-15T12:00:00.000Z",
+          summary: { active: 1, highestSeverity: "severe" }, alerts: [],
+        } });
+      }
       return route.fulfill({ json: {
         dataSource: url.pathname.endsWith("/rs/alerts") ? "stale" : "cache", region: regions[0], updatedAt: "2026-11-15T12:00:00.000Z",
         summary: { active: 1, highestSeverity: "severe" }, alerts: [active, expired],
@@ -49,6 +55,7 @@ try {
   await page.getByRole("heading", { name: "Alertas meteorológicos" }).waitFor();
   await page.getByText("Alerta ativo de chuva").waitFor();
   await page.getByText("Alerta encerrado de vento").waitFor();
+  await page.getByText(/consulta completa não trouxe os alertas ativos/i).waitFor();
   const onset = page.locator('time[datetime="2026-11-15T02:30:00.000Z"]').first();
   await onset.waitFor();
   assert.match(await onset.innerText(), /15\/11\/2026, 02:30 UTC/, "CAP timestamps must stay on the UTC date across the local midnight");
@@ -67,6 +74,8 @@ try {
     await page.setViewportSize({ width, height: 844 });
     await page.evaluate(() => document.fonts.ready);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `No horizontal overflow at ${width}px with expanded official text`);
+    const nav = page.getByRole("navigation", { name: "Navegação principal" });
+    for (const label of ["Início", "Mapa", "Alertas"]) await nav.getByRole("link", { name: label }).waitFor({ state: "visible" });
   }
   await page.setViewportSize({ width: 1280, height: 900 });
 

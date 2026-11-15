@@ -39,7 +39,16 @@ export function AlertsPage() {
   const regions = useRegions("state");
   const query = useQuery({
     queryKey: ["alerts", regionId, "history"],
-    queryFn: ({ signal }) => apiGet<AlertsResponse>(`/regions/${encodeURIComponent(regionId)}/alerts`, { include: "history" }, signal),
+    queryFn: async ({ signal }) => {
+      const path = `/regions/${encodeURIComponent(regionId)}/alerts`;
+      const history = await apiGet<AlertsResponse>(path, { include: "history" }, signal);
+      const includesActiveAlerts = history.alerts.some((alert) => alert.status === "active");
+      if (history.summary.active > 0 && !includesActiveAlerts) {
+        const recent = await apiGet<AlertsResponse>(path, { include: "recent" }, signal);
+        return { ...recent, historyFallback: true };
+      }
+      return { ...history, historyFallback: false };
+    },
     retry: false,
     staleTime: 300_000,
     refetchInterval: 300_000,
@@ -100,6 +109,11 @@ export function AlertsPage() {
           <span role="status">O catálogo do INMET não respondeu agora. Estes avisos vêm da última cópia salva e podem estar desatualizados.</span>
         ) : null}
       </div>
+      {query.data?.historyFallback ? (
+        <p role="status" className="rounded border border-[#8a6d24] bg-[#332b12] px-4 py-3 text-[13px] text-[#f4d77a]">
+          A consulta completa não trouxe os alertas ativos indicados no resumo. Recuperamos os avisos recentes; o histórico pode estar limitado às últimas 48 horas.
+        </p>
+      ) : null}
 
       {query.isPending ? <ProgressBar label="Carregando alertas e histórico" /> : null}
       {query.error ? (

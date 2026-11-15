@@ -87,7 +87,7 @@ Cada incremento será delegado pelo `./junior.sh` conforme `AGENTS.md`, em branc
 - [ ] F4 parcial: 153 testes (62 servidor + 91 web), typecheck e build passam. Smokes Chromium com fixtures para busca estadual, radar diário, composição multiday, recorte territorial e `/alerts` passaram. O smoke da home foi repetido, mas expirou após 120 s aguardando as imagens externas; o endpoint ASF respondeu aos headers, porém o corpo de 5,2 MB não concluiu em 35 s no Chromium. Essa repetição não confirma a jornada da home nesta execução. Axe em `/alerts` no Chromium e Firefox: zero violações WCAG A/AA; nas quatro rotas anteriores (`/`, `/explore`, `/region/rs?tab=alerts`, `/compare`) há evidência registrada no inventário. Primeiro foco “Pular para o conteúdo”; `prefers-reduced-motion` reconhecido. Ainda não houve revisão com leitor de tela, Safari ou zoom; A01–A24 não têm aceite completo.
 - [x] F5 PR #5 publicada e aberta contra `feat/frontend-prototipo`; sem merge. PRs #1–#4 permanecem abertas como dependências upstream.
 
-Atualização do cabeçalho (2026-11-15): testes, typecheck e build passaram após a reorganização visual. Não foi possível repetir a verificação em navegador nesta sessão porque o módulo Playwright não está instalado/disponível; os smokes já registrados exercitam a navegação anterior, não a nova disposição visual.
+Atualização (2026-11-15): Playwright foi instalado temporariamente fora do repositório. Browser smoke comprovou cabeçalho responsivo e reproduziu a divergência de `/alerts?region=sc`: a API local antiga devolve `summary.active > 0` com `alerts: []` para `include=history`, enquanto `include=recent` contém os ativos. A página agora consulta `recent` nesse envelope inconsistente, exibe os alertas e informa que o histórico pode cobrir apenas 48 horas. A mesma chamada contra uma instância limpa da API retorna normalmente o histórico de oito dias.
 
 ### Auditoria por critério A01–A24 (2026-11-15)
 
@@ -108,7 +108,7 @@ O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificaç
 | A11 | Verificado por smoke | `compare-smoke.mjs` abre URL com geometrias diferentes e confirma o aviso e os dados de faixa. |
 | A12 | Parcial | `browseImage.test.ts` cobre georef nula/baixa; smoke diário confirma exclusão visual, mas falta inspecionar detalhes em estado de erro. |
 | A13 | Verificado por smoke | `compare-smoke.mjs` injeta falha de download, usa retry contextual e confirma o texto da comparação preservado. WebGL ainda não foi bloqueado em teste. |
-| A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias e ativos/histórico preenchidos. |
+| A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias, ativos/histórico preenchidos e recupera alertas ativos quando a resposta `history` é inconsistente com `summary.active`. |
 | A15 | Verificado por smoke | `alerts-smoke.mjs` injeta INMET 503, confirma retry e navega ao Radar estadual com os demais endpoints funcionais. |
 | A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
 | A17 | Verificado em unidade + smoke | Expiração muda de ativo para histórico com relógio do navegador avançado, sem novo fetch. |
