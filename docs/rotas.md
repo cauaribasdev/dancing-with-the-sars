@@ -130,7 +130,7 @@ Organizações da sociedade civil que apoiam pessoas em situação de vulnerabil
 - **`campaigns`:** projetos do GlobalGiving (`{ "source", "title", "url" }`). Fica vazio se a chave `GLOBALGIVING_API_KEY` não estiver definida.
 - **`total`:** quantas organizações do estado cumprem o filtro, antes do `limit`.
 
-### 2.4 `GET /regions/:id/posts` (nova, opção A de [produto.md](produto.md#4-feed-de-publicações-posts))
+### 2.4 `GET /regions/:id/posts` (nova, opção automática aceita em [produto.md](produto.md#4-feed-de-publicações-posts))
 
 Publicações geradas a partir dos dados do radar.
 
@@ -235,3 +235,7 @@ Base: `https://mapaosc.ipea.gov.br/api/api`. O Swagger mostra `/api/...`, mas o 
 | Rota | Teste | Uso |
 |---|---|---|
 | `https://api.globalgiving.org/api/public/projectservice/countries/BR/projects/active?api_key=...` com `Accept: application/json` | 400 sem chave | `campaigns` em `/organizations`. Só no servidor, com a chave em `GLOBALGIVING_API_KEY` |
+
+## Decisões aceitas e dependências
+
+As rotas de alerts, organizations e posts são contratos planejados e ainda não estão disponíveis. A aba Alerts solicitará `include=recent`; `active` continua sendo o padrão da API. Para links regionais legados sem tab, day ou pass abrem Radar; na ausência de ambos, Overview. Ver [frontend.md](frontend.md). Organizations precisa de metadados de snapshot, proveniência, referência de passagem e disponibilidade parcial de campanhas; posts precisa de contrato de paginação. Não exigir esses campos antes de sua disponibilidade.

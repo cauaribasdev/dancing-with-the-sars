@@ -160,3 +160,8 @@ web/
   src/features/               uma pasta por página: overview, region, story, compare
   DESIGN.md                   linguagem visual (paleta, tipografia, layout, texto)
 ```
+
+
+## Estado atual e evolução aprovada
+
+A evolução aprovada do frontend prevê navegação por estados e abas Overview, Radar, Alerts, Posts e Help. Os endpoints novos ainda não estão implementados. Comparações visuais não constituem detecção automática de desastre. Consulte [a documentação de frontend](docs/frontend.md).
