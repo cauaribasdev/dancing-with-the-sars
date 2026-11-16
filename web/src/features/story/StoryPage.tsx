@@ -87,6 +87,8 @@ export function StoryPage() {
           onChoosePair={(p) => setChosenPair(pairKey(p))}
           selectedPlace={target?.place.name}
           onChoosePlace={choosePlace}
+          onRetry={() => void story.refetch()}
+          isUpdating={story.isFetching}
         />
       }
     />
@@ -100,6 +102,8 @@ function StoryPanel({
   onChoosePair,
   selectedPlace,
   onChoosePlace,
+  onRetry,
+  isUpdating,
 }: {
   story: Story;
   featured: StoryPair[];
@@ -107,6 +111,8 @@ function StoryPanel({
   onChoosePair: (p: StoryPair) => void;
   selectedPlace: string | undefined;
   onChoosePlace: (p: StoryPlace) => void;
+  onRetry: () => void;
+  isUpdating: boolean;
 }) {
   const others = otherPairs(s);
   return (
@@ -117,7 +123,7 @@ function StoryPanel({
         <p className="text-[12px] text-ink-3">Narrativa e títulos das fontes em inglês, no idioma original.</p>
         <p className="text-[13px] text-ink-3">Evento em {formatDateLong(s.eventDate)}</p>
       </header>
-      <StaleNotice dataSource={s.dataSource} />
+      <StaleNotice dataSource={s.dataSource} onRetry={onRetry} isUpdating={isUpdating} />
 
       <p className="text-[15px] leading-[1.55] text-ink">{s.narrative.summary}</p>
 

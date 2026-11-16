@@ -28,6 +28,18 @@ await page.waitForTimeout(2500);
 await page.screenshot({path:'artifacts/redesign/brasil-desktop.png'});
 const nationalClip=await page.locator('canvas').first().evaluate(el=>el.style.clipPath);
 assert.ok(nationalClip.startsWith('path('),'national mask must be active');
+const nationalMapBox=await page.locator('.territorial-map').boundingBox();
+let mapSelected;
+for(const [x,y] of [[.50,.75],[.52,.75],[.54,.75],[.56,.75],[.58,.75],[.50,.78],[.52,.78],[.54,.78],[.56,.78],[.58,.78],[.50,.81],[.52,.81],[.54,.81],[.56,.81],[.58,.81],[.50,.84],[.52,.84],[.54,.84],[.56,.84],[.58,.84],[.50,.87],[.52,.87],[.54,.87],[.56,.87],[.58,.87]]){
+ if(new URL(page.url()).searchParams.has('region')){await page.goto('http://127.0.0.1:5173/explore');await page.waitForTimeout(900);}
+ await page.mouse.click(nationalMapBox.x+nationalMapBox.width*x,nationalMapBox.y+nationalMapBox.height*y);
+ await page.waitForTimeout(300);
+ mapSelected=new URL(page.url()).searchParams.get('region');
+ if(mapSelected==='sc')break;
+}
+assert.equal(new URL(page.url()).searchParams.get('region'),'sc','clicking Santa Catarina on the national map selects the same UF as the list');
+await page.goto('http://127.0.0.1:5173/explore');
+await page.waitForTimeout(1500);
 await page.getByLabel('Buscar estado').fill('SC');
 assert.equal(await page.locator('#region-select option[value=sc]').count(),1);
 assert.equal(await page.locator('#region-select option[value=br]').count(),1);

@@ -35,16 +35,33 @@ function CautionIcon() {
  * Shown only when a response came back with dataSource "stale": NASA did not answer and the server
  * returned the last saved copy. Put it next to the numbers that came from that response.
  */
-export function StaleNotice({ dataSource, className }: { dataSource: DataSource | undefined; className?: string }) {
+export function StaleNotice({
+  dataSource,
+  className,
+  onRetry,
+  isUpdating = false,
+}: {
+  dataSource: DataSource | undefined;
+  className?: string;
+  onRetry?: () => void;
+  isUpdating?: boolean;
+}) {
   if (dataSource !== "stale") return null;
   return (
-    <p
-      role="status"
-      className={`flex gap-2 rounded-[3px] bg-caution-wash px-3 py-2 text-[13px] leading-snug text-caution ${className ?? ""}`}
-    >
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[3px] bg-caution-wash px-3 py-2 text-[13px] leading-snug text-caution ${className ?? ""}`}>
       <CautionIcon />
-      <span>O catálogo da NASA não respondeu agora. Estes dados são a última cópia salva e podem estar desatualizados.</span>
-    </p>
+      <span role="status" className="min-w-0 flex-1">O catálogo da NASA não respondeu agora. Estes dados são a última cópia salva e podem estar desatualizados.</span>
+      {onRetry ? (
+        <button
+          type="button"
+          className="rounded border border-current px-2 py-1 font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current disabled:cursor-wait disabled:opacity-60"
+          onClick={onRetry}
+          disabled={isUpdating}
+        >
+          {isUpdating ? "Atualizando…" : "Atualizar dados"}
+        </button>
+      ) : null}
+    </div>
   );
 }
 

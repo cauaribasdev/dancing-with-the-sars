@@ -31,7 +31,7 @@ function FeaturedStory() {
   return <section className="home-story" aria-labelledby="home-story-title">
     <div className="home-story-heading"><div><p className="home-eyebrow">Um território, dois momentos</p><h2 id="home-story-title">Rio Grande do Sul visto pelo radar</h2></div><Link className="link" to={paths.story(STORY_ID)}>Abrir história completa →</Link></div>
     <p className="text-ink-2">Explore a história da cheia de julho de 2026 e compare observações da mesma faixa de aquisição. Veja na história onde olhar e como interpretar as diferenças.</p>
-    {story.data && <StaleNotice dataSource={story.data.dataSource} />}
+    {story.data && <StaleNotice dataSource={story.data.dataSource} onRetry={() => void story.refetch()} isUpdating={story.isFetching} />}
     {pair ? <><div className="home-preview-grid"><Preview passId={pair.before.id} date={pair.before.date} label="Antes"/><Preview passId={pair.after.id} date={pair.after.date} label="Depois"/></div><p className="text-sm text-ink-3">Prévias de aquisições reais, sem escala cartográfica nesta apresentação. Abra a história para comparar no mapa georreferenciado.</p></>
       : <div className="home-story-empty" role="status"><p>{story.isError ? 'Não foi possível carregar a prévia da história.' : story.data ? 'Nenhum par de imagens disponível para esta prévia.' : 'Buscando as observações da história…'}</p>{story.isError && <button type="button" className="link" onClick={()=>story.refetch()}>Tentar novamente</button>}<p>Você pode continuar para a história ou explorar o mapa.</p></div>}
   </section>;

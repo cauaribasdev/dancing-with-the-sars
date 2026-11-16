@@ -95,7 +95,11 @@ export function ComparePage() {
             : `Duas imagens de radar com intervalo de ${plural(days, "dia", "dias")}, em ${formatDateLong(before.date)} e ${formatDateLong(after.date)}.${notes.sameGeometry ? " Alterne entre elas no mapa para observar as diferenças." : " Leia o aviso abaixo antes de alternar entre elas no mapa."}`}
         </p>
       </header>
-      <StaleNotice dataSource={stale} />
+      <StaleNotice
+        dataSource={stale}
+        onRetry={() => void Promise.all([first.refetch(), second.refetch()])}
+        isUpdating={first.isFetching || second.isFetching}
+      />
 
       {!notes.sameGeometry ? (
         <Caution>

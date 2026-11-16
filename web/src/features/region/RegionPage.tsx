@@ -163,7 +163,11 @@ export function RegionPage() {
           loading={passes.isFetching && (!data || pending)}
           lastDate={current ? current.summary.lastDate : undefined}
         />
-        <StaleNotice dataSource={data?.dataSource} />
+        <StaleNotice
+          dataSource={data?.dataSource}
+          onRetry={() => void Promise.all([passes.refetch(), footprints.refetch()])}
+          isUpdating={passes.isFetching || footprints.isFetching}
+        />
         {error ? <PeriodError error={error} region={region} onRetry={() => (passes.isError ? passes.refetch() : footprints.refetch())} /> : null}
         {!data && !error && region?.kind === "country" ? (
           <p className="text-[13px] leading-snug text-ink-3">O Brasil tem cerca de mil passagens por mês, então o mapa precisa desenhar muitos contornos.</p>

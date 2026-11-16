@@ -23,9 +23,10 @@ await page.route('**/api/**',async route=>{
 const {createRequire}=await import('node:module');const require=createRequire(import.meta.url);const {PNG}=require('pngjs');
 const png=new PNG({width:8,height:8});for(let i=0;i<png.data.length;i+=4){png.data[i]=50;png.data[i+1]=150;png.data[i+2]=200;png.data[i+3]=255;}
 const image=PNG.sync.write(png);
+let ungeoreferencedImageDownloads=0;
 const region=states.find(f=>f.properties.id==='sc');const bbox=region.properties.bbox;
 const passes=[1,2,3].map(n=>({id:'synthetic-'+n,conceptId:'c'+n,product:'GCOV',collection:'demo',maturity:'validated',productVersion:'1',start:`2026-11-01T0${n}:00:00Z`,end:`2026-11-01T0${n}:05:00Z`,date:'2026-11-01',cycle:1,orbit:1,track:n,frame:1,direction:'ascending',stackId:'stack-'+n,fullFrame:true,frequencies:['A'],polarizations:['HH'],rangeBandwidthMHz:20,sizeBytes:1024,footprint:region.geometry.type==='MultiPolygon'?{type:'Polygon',coordinates:region.geometry.coordinates[0]}:region.geometry,bbox,browse:{latlon:`https://example.test/browse/${n}.png`,thumbnail:`https://example.test/browse/${n}.png`},download:'https://example.test/download/'+n,qaReport:'https://example.test/qa/'+n}));
-await page.route('https://example.test/browse/**',route=>route.fulfill({contentType:'image/png',body:image}));
+await page.route('https://example.test/browse/**',route=>{if(route.request().url().endsWith('/3.png'))ungeoreferencedImageDownloads++;return route.fulfill({contentType:'image/png',body:image});});
 await page.route('**/api/**',async route=>{
  const url=new URL(route.request().url());
  if(url.pathname==='/api/regions/sc/passes')return route.fulfill({json:{dataSource:'cache',region:region.properties,query:{start:'2026-11-01',end:'2026-11-15',product:'GCOV'},summary:{...summary,acquisitions:3,distinctDates:1,lastDate:'2026-11-01'},timeline:[{date:'2026-11-01',acquisitions:3,stacks:passes.map(p=>p.stackId)}],passes}});
@@ -49,6 +50,12 @@ await page.screenshot({path:'/tmp/sars-daily-radar.png',fullPage:true});
 await page.getByLabel('Exibir todas as passagens do dia',{exact:true}).click();
 await page.waitForURL(url=>url.searchParams.getAll('image').length===0);
 await page.getByText('2/3 imagens prontas',{exact:false}).waitFor({state:'hidden'});
+await page.goto('http://127.0.0.1:5173/region/sc?tab=radar&start=2026-11-01&end=2026-11-15&day=2026-11-01&pass=synthetic-3');
+await page.waitForURL(url=>url.searchParams.get('pass')==='synthetic-3');
+await page.getByText('Esta imagem (imagem de radar) não será exibida',{exact:true}).waitFor();
+await page.getByRole('link',{name:'Baixar produto',exact:true}).waitFor();
+assert.equal(await page.getByRole('link',{name:'Baixar produto',exact:true}).getAttribute('href'),'https://example.test/download/3');
+assert.equal(ungeoreferencedImageDownloads,0,'a PNG without georeferencing must never be positioned on the map');
 assert.deepEqual(errors,[]);
 await browser.close();
-console.log('PASS: simultaneous daily images, exclusion of missing georef, toggle back to individual mode');
+console.log('PASS: null georef excludes image while pass details/download remain accessible; daily composition excludes it too');

@@ -87,7 +87,7 @@ Cada incremento será delegado pelo `./junior.sh` conforme `AGENTS.md`, em branc
 - [ ] F4 parcial: 153 testes (62 servidor + 91 web), typecheck e build passam. Smokes Chromium com fixtures para busca estadual, radar diário, composição multiday, recorte territorial e `/alerts` passaram. O smoke da home foi repetido, mas expirou após 120 s aguardando as imagens externas; o endpoint ASF respondeu aos headers, porém o corpo de 5,2 MB não concluiu em 35 s no Chromium. Essa repetição não confirma a jornada da home nesta execução. Axe em `/alerts` no Chromium e Firefox: zero violações WCAG A/AA; nas quatro rotas anteriores (`/`, `/explore`, `/region/rs?tab=alerts`, `/compare`) há evidência registrada no inventário. Primeiro foco “Pular para o conteúdo”; `prefers-reduced-motion` reconhecido. Ainda não houve revisão com leitor de tela, Safari ou zoom; A01–A24 não têm aceite completo.
 - [x] F5 PR #5 publicada e aberta contra `feat/frontend-prototipo`; sem merge. PRs #1–#4 permanecem abertas como dependências upstream.
 
-Atualização (2026-11-15): Playwright foi instalado temporariamente fora do repositório. Browser smoke comprovou cabeçalho responsivo e reproduziu a divergência de `/alerts?region=sc`: a API local antiga devolve `summary.active > 0` com `alerts: []` para `include=history`, enquanto `include=recent` contém os ativos. A página agora consulta `recent` nesse envelope inconsistente, exibe os alertas e informa que o histórico pode cobrir apenas 48 horas. A mesma chamada contra uma instância limpa da API retorna normalmente o histórico de oito dias.
+Atualização (2026-11-15): Playwright foi instalado temporariamente fora do repositório. Browser smokes cobrem cabeçalho em 320/390 px, clique direto no polígono SC, restauração de aba/período/dia/passagem com voltar/avançar/reload, limpeza de seleção ao trocar mês/UF e detalhes acessíveis com georreferenciamento nulo. O smoke stale confirma dados preservados e botão de atualizar no Overview e em Publicações. Também reproduziu a divergência de `/alerts?region=sc`: a API local antiga devolve `summary.active > 0` com `alerts: []` para `include=history`, enquanto `include=recent` contém os ativos; a página agora recupera os avisos e informa que o histórico pode cobrir apenas 48 horas. Uma instância limpa da API retorna normalmente o histórico de oito dias.
 
 ### Auditoria por critério A01–A24 (2026-11-15)
 
@@ -95,25 +95,25 @@ O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificaç
 
 | Critério | Status atual | Evidência / lacuna concreta |
 |---|---|---|
-| A01 | Parcial | Smokes territorial e busca cobrem escolha por lista; não há verificação explícita do clique em polígono do mapa. |
+| A01 | Verificado por smoke | `territorial-smoke.mjs` seleciona SC clicando no mapa nacional; a URL corresponde à UF escolhida depois pela lista. |
 | A02 | Verificado por smoke | `state-search-smoke.mjs` abre `br`, macrorregião e UF desconhecida; cada caminho mostra página não encontrada e volta ao mapa. |
 | A03 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem links sem `tab` com `day`/`pass`, normalizados para Radar. |
 | A04 | Verificado por unidade + smoke | O smoke abre `/region/sc` sem parâmetros, confirma Overview e normalização de URL/período. |
 | A05 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem aba/período inválidos, aviso e limpeza de seleção. |
-| A06 | Parcial | Multiday verifica recarga/seleção; falta Browser Back entre abas e restauração completa por jornada. |
-| A07 | Parcial | Multiday verifica limpeza e troca de UF; não cobre troca de período por todos os caminhos da interface. |
+| A06 | Verificado por smoke | `multiday-radar-smoke.mjs` alterna Radar/Alertas, usa voltar/avançar e reload, confirmando restauração de aba, período, dia e passagem selecionada. |
+| A07 | Verificado por smoke | `multiday-radar-smoke.mjs` confirma que trocar mês ou UF limpa dia/passagem/composição e preserva o período apropriado. |
 | A08 | Verificado por smoke | `alerts-smoke.mjs` libera a resposta atrasada de RS depois da resposta vazia de SC e confirma que a tela continua em SC. |
 | A09 | Verificado em unidade + smoke | `pairs.test.ts` verifica mediana nula; `state-search-smoke.mjs` confirma “Dados insuficientes” no Overview. |
 | A10 | Verificado em unidade + smoke | `pairs.test.ts` verifica ausência/desempate; `state-search-smoke.mjs` confirma “Nenhum par disponível” no Overview. |
 | A11 | Verificado por smoke | `compare-smoke.mjs` abre URL com geometrias diferentes e confirma o aviso e os dados de faixa. |
-| A12 | Parcial | `browseImage.test.ts` cobre georef nula/baixa; smoke diário confirma exclusão visual, mas falta inspecionar detalhes em estado de erro. |
-| A13 | Verificado por smoke | `compare-smoke.mjs` injeta falha de download, usa retry contextual e confirma o texto da comparação preservado. WebGL ainda não foi bloqueado em teste. |
+| A12 | Verificado em unidade + smoke | `browseImage.test.ts` cobre georef nula/baixa; `daily-radar-smoke.mjs` confirma que georef nula impede download/posicionamento e mantém detalhes e link do produto. |
+| A13 | Parcial | `compare-smoke.mjs` injeta falha de download, usa retry contextual e confirma o texto da comparação preservado. A indisponibilidade de WebGL ainda não foi simulada. |
 | A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias, ativos/histórico preenchidos e recupera alertas ativos quando a resposta `history` é inconsistente com `summary.active`. |
 | A15 | Verificado por smoke | `alerts-smoke.mjs` injeta INMET 503, confirma retry e navega ao Radar estadual com os demais endpoints funcionais. |
 | A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
 | A17 | Verificado em unidade + smoke | Expiração muda de ativo para histórico com relógio do navegador avançado, sem novo fetch. |
 | A18 | Verificado por smoke | `alerts-smoke.mjs` força timezone local de São Paulo e confirma o dia e hora UTC do CAP na virada local de dia. |
-| A19 | Parcial | `/alerts` e Help mostram stale com dados no smoke; Overview e Posts ainda não têm falha-com-cache verificada via browser. |
+| A19 | Verificado por smoke | `stale-smoke.mjs` confirma dados stale preservados e atualização por botão no Overview e em Posts; smokes de Alertas e Help também cobrem stale. |
 | A20 | Verificado por smoke | `alerts-smoke.mjs` confirma que uma resposta antiga, liberada depois da UF atual, não substitui os dados da UF selecionada. |
 | A21 | Verificado por smoke | `help-smoke.mjs` distingue serviço indisponível (alerta/retry) de resultado vazio (mensagem vazia sem erro). |
 | A22 | Verificado por smoke | `help-smoke.mjs` dá resposta vazia de campanhas e confirma que a interface não inventa motivo. |

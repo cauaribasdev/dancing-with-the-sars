@@ -74,7 +74,7 @@ export function OverviewPage() {
         <dl className="sidebar-metrics"><div><dt>Passagens</dt><dd>{selectedCoverage?.acquisitions ?? '—'}</dd></div><div><dt>Dias observados</dt><dd>{selectedCoverage?.distinctDates ?? '—'}</dd></div></dl>
         {pending && !coverage.isError && <p role="status">Consultando cobertura…</p>}
         {coverage.isError && !coverageData && <ErrorMessage onRetry={()=>coverage.refetch()}>{describeError(coverage.error)}</ErrorMessage>}
-        <StaleNotice dataSource={coverageData?.dataSource}/>
+        <StaleNotice dataSource={coverageData?.dataSource} onRetry={() => void coverage.refetch()} isUpdating={coverage.isFetching}/>
         {selectedRegion ? <Link className="radar-action" to={`${paths.region(selectedRegion.id,period)}&tab=radar`}>Abrir Radar de {selectedRegion.code}<span aria-hidden>→</span></Link> : <p className="sidebar-hint">Selecione um estado para abrir o calendário de passagens.</p>}
         {selectedRegion && <details className="sidebar-disclosure"><summary>Detalhes da cobertura</summary><RegionSummary region={selectedRegion} regions={regions.data??[]} coverage={coverageData} period={period} month={month} pending={pending} onSelect={region=>update({region})}/></details>}
       </section>
