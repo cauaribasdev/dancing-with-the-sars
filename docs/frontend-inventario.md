@@ -53,6 +53,9 @@ Qwen: `demoFeeds.ts`, primeira execução aprovada. `navigation.ts` foi delegado
 
 Arquivos: `web/src/features/region/{StatePage.tsx,navigation.ts,navigation.test.ts,demoFeeds.ts,demoFeeds.test.ts}`, `web/src/app/{router.tsx,styles.css}`, `web/src/features/overview/OverviewPage.tsx`; tarefas reproduzíveis em `tasks/frontend/`. `.gitignore` preexistente preservado; ARCHITECTURE.md continua local. Documentação versionada reside neste inventário. Publicar como rascunho enquanto os critérios restantes estiverem pendentes.
 
+## Publicação para acompanhamento em dev
+
+A implementação está na PR #3: https://github.com/cauaribasdev/dancing-with-the-sars/pull/3, commit `2b00d33`, ainda em rascunho e empilhada sobre #2. Este documento relata trabalho de outra branch; não afirma que as funcionalidades já estejam em dev. Esta entrega de documentação é independente e não incorpora código de #1, #2 ou #3.
 ## Redesign territorial — 2026-11-15
 
 Branch local `feat/territorial-redesign`, baseada no commit da PR #3. Na inspeção, #1 → dev, #2 → #1, #3 → #2 e #4 → dev continuavam abertas. Nenhum merge automático. `.gitignore` preexistente permanece fora da entrega.
