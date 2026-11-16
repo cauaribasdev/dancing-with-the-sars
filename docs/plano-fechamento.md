@@ -107,7 +107,7 @@ O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificaç
 | A10 | Verificado em unidade + smoke | `pairs.test.ts` verifica ausência/desempate; `state-search-smoke.mjs` confirma “Nenhum par disponível” no Overview. |
 | A11 | Verificado por smoke | `compare-smoke.mjs` abre URL com geometrias diferentes e confirma o aviso e os dados de faixa. |
 | A12 | Verificado em unidade + smoke | `browseImage.test.ts` cobre georef nula/baixa; `daily-radar-smoke.mjs` confirma que georef nula impede download/posicionamento e mantém detalhes e link do produto. |
-| A13 | Parcial | `compare-smoke.mjs` injeta falha de download, usa retry contextual e confirma o texto da comparação preservado. A indisponibilidade de WebGL ainda não foi simulada. |
+| A13 | Verificado por smoke | `compare-smoke.mjs` cobre falha/retry de imagem; `webgl-smoke.mjs` bloqueia os contextos WebGL, confirma aviso acessível, tentativa de reinicialização e detalhes da comparação preservados. |
 | A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias, ativos/histórico preenchidos e recupera alertas ativos quando a resposta `history` é inconsistente com `summary.active`. |
 | A15 | Verificado por smoke | `alerts-smoke.mjs` injeta INMET 503, confirma retry e navega ao Radar estadual com os demais endpoints funcionais. |
 | A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
