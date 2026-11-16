@@ -1,3 +1,18 @@
+# Identidade visual atual — Dancing With the SARs
+
+Atualizado em 2026-11-15. A seção histórica abaixo documenta o design anterior; os tokens vigentes estão em `src/app/styles.css` e `src/map/mapColors.ts`.
+
+- Home de apresentação em `/`, mapa em `/explore`; ferramentas de análise continuam centradas no mapa.
+- Identidade Space Apps: logos oficiais 2026, Overpass local, Deep Blue `#07173F`, Electric Blue `#0042A6`, Neon Blue `#0960E1` e Neon Yellow `#EAFE07` pontual. Guia/fontes/licença: [recursos de marca](public/brand/README.md).
+- Fundo principal `#05070D`; texto `#F8FAFC`; textos secundários `#B6C2D2` e `#94A3B8`. Hero com gradiente azul suave, painéis sólidos, sem neon/sombras decorativas. Logos intactos, sem esticar/recolorir.
+- Cobertura e imagens geográficas mantêm sua paleta própria, sem recolorir observações científicas para combinar com a marca.
+- Home usa imagens reais via API, jamais substituídas por ilustrações de desastres. Estados vazios/falhas mantêm os links operacionais.
+- Cabeçalho de 64px, sidebar de análise compacta, home em coluna única no mobile; foco visível e links nativos. Controles móveis recolhíveis preservados.
+- Home, cabeçalho e textos próprios dos detalhes de passagem em português. Há textos legados e narrativas da API em inglês; tradução integral continua pendente, sem tradução automática de conteúdo científico.
+- Composição: aquisição mais antiga primeiro, recente por último. Ordem corrigida após carregamentos assíncronos do MapLibre; IDs/datas UTC visíveis. Misturar datas amplia observação disponível, não representa uma aquisição simultânea nem detecção automática.
+
+## Registro histórico — design anterior (não normativo)
+
 # Linguagem visual: NISAR over Brazil
 
 Guia para quem constrói páginas em `web/`. A interface é em **inglês**; esta documentação é em português.
@@ -120,3 +135,15 @@ Proibido: caixa alta em rótulos, rótulo-sobrancelha acima de título, `A · B 
    over Rio Grande do Sul on 20 days.") seguida de uma tabela de fatos.
 5. **Legenda em degraus encostados** (como escala hipsométrica), em vez de gradiente contínuo: as classes são fixas
    e comparáveis entre meses.
+
+## Abas estaduais e novas seções — decisões aprovadas
+
+Manter a identidade visual existente, o painel desktop de 380 px e o mapa primeiro no mobile com 58svh e mínimo de 320 px. A faixa de cinco abas permite rolagem horizontal, mantém a aba focada visível e diferencia foco de seleção. Usar semântica tablist/tab/tabpanel, setas, Home/End e ativação por Enter ou Space. Preservar a câmera ao trocar de aba.
+
+Overview apresenta números, comparação visual, alertas, organizações, história e contatos de emergência. Radar preserva calendário e detalhe. Posts mostra tipo, data, texto e ação; Help mostra referência de distância, filtros, total, itens e aviso de não endosso. Cartões longos de alertas permitem expansão por teclado sem eliminar texto oficial.
+
+Cada seção diferencia carregamento, vazio, erro, atualização e dados antigos, com texto e ícone além da cor e retry contextual. “No active alerts” exige consulta bem-sucedida; falha usa “Alerts could not be checked”. Textos oficiais permanecem em português com lang apropriado.
+
+A cor de severidade é fornecida pelo INMET; somente moderate #FFFE00 é exemplificado. Usar fallback neutro para cor ausente ou inválida. A seleção no mapa usa amarelo de anotação com contorno escuro, distinguido por legenda, texto e ícone. Selos nacionais indicam alertas ativos. Polígonos de alertas e marcadores de organizações são extensões aprovadas fora do núcleo mínimo, com alternativa em lista e sem encobrir controles ou rótulos.
+
+Verificar foco visível, contraste, toque, zoom, reflow e movimento reduzido. Não declarar conformidade certificada sem avaliação correspondente.

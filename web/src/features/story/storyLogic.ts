@@ -17,27 +17,27 @@ export function pairKey(p: Pick<StoryPair, "before" | "after">): string {
   return `${p.before.id}|${p.after.id}`;
 }
 
-/** "Jul 11 and Jul 23" */
+/** Datas das duas passagens em português. */
 export function pairDates(p: Pick<StoryPair, "before" | "after">): string {
-  return `${formatDayShort(p.before.date)} and ${formatDayShort(p.after.date)}`;
+  return `${formatDayShort(p.before.date)} e ${formatDayShort(p.after.date)}`;
 }
 
-/** "11 days before the event and 1 day after"; a pass on the event date says so. */
+/** Distância das passagens em relação à data do evento. */
 export function pairTiming(p: Pick<StoryPair, "daysBeforeEvent" | "daysAfterEvent">): string {
-  const before = p.daysBeforeEvent === 0 ? "On the event date" : `${plural(p.daysBeforeEvent, "day", "days")} before the event`;
-  const after = p.daysAfterEvent === 0 ? "on the event date" : `${plural(p.daysAfterEvent, "day", "days")} after`;
-  return `${before} and ${after}`;
+  const before = p.daysBeforeEvent === 0 ? "Na data do evento" : `${plural(p.daysBeforeEvent, "dia", "dias")} antes do evento`;
+  const after = p.daysAfterEvent === 0 ? "na data do evento" : `${plural(p.daysAfterEvent, "dia", "dias")} depois`;
+  return `${before} e ${after}`;
 }
 
 /**
- * Area a pair covers, from the passes' outlines. Only for framing the map: the images themselves are always
- * placed by georef.corners. (The PNG bounds are larger than the data, because the strip is slanted inside them.)
+ * Área coberta por um par, a partir dos contornos das passagens. Usada apenas para enquadrar o mapa: as imagens são sempre
+ * posicionadas por georef.corners. (Os limites do PNG são maiores que os dados porque a faixa fica inclinada dentro deles.)
  */
 export function pairArea(p: Pick<StoryPair, "before" | "after">): BBox {
   return bboxUnion(p.before.bbox, p.after.bbox);
 }
 
-/** What to frame when a pair is chosen: the part of the story's opening area the pair covers, or the whole pair. */
+/** Área a enquadrar ao escolher um par: a parte coberta da área inicial da história ou o par inteiro. */
 export function pairFocus(p: Pick<StoryPair, "before" | "after">, openingArea: BBox): BBox {
   const area = pairArea(p);
   return bboxIntersection(area, openingArea) ?? area;

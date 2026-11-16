@@ -13,10 +13,12 @@ interface Props {
   selectedDay: IsoDate | null;
   onSelectPass: (pass: Pass) => void;
   disabled: boolean;
+  selectedImageIds?: string[];
+  onToggleImage?: (pass: Pass) => void;
 }
 
 /** Passes of the chosen day, or of the whole period when it is small enough. */
-export function PassList({ passes, selectedDay, onSelectPass, disabled }: Props) {
+export function PassList({ passes, selectedDay, onSelectPass, disabled, selectedImageIds = [], onToggleImage }: Props) {
   const shown = useMemo(
     () => (selectedDay ? passes.filter((p) => p.date === selectedDay) : passes),
     [passes, selectedDay],
@@ -25,21 +27,27 @@ export function PassList({ passes, selectedDay, onSelectPass, disabled }: Props)
 
   return (
     <section className={`flex flex-col gap-3 ${disabled ? "opacity-40" : ""}`} aria-labelledby="passes-title">
-      <SectionTitle id="passes-title">{selectedDay ? `Passes on ${formatDateLong(selectedDay)}` : "All passes"}</SectionTitle>
+      <SectionTitle id="passes-title">{selectedDay ? `Passagens em ${formatDateLong(selectedDay)}` : "Todas as passagens"}</SectionTitle>
       {shown.length > LIST_LIMIT ? (
         <p className="text-[14px] leading-snug text-ink-2">
-          There are {formatNumber(shown.length)} passes in this period, all outlined on the map. Pick a day above to list
-          its passes, or click an outline on the map.
+          Há {formatNumber(shown.length)} passagens neste período, todas destacadas no mapa. Selecione uma data acima para listar as passagens do dia ou clique em um contorno no mapa.
         </p>
       ) : (
         <>
-          <p className="text-[13px] leading-snug text-ink-3">Pick a pass to see its radar image on the map.</p>
+          <p className="text-[13px] leading-snug text-ink-3">Selecione uma passagem para ver sua imagem de radar no mapa.</p>
           {groups.map((g) => (
             <div key={g.date} className="flex flex-col">
               {selectedDay ? null : <h3 className="pb-1 text-[13px] font-[600] text-ink-2">{formatDayShort(g.date)}</h3>}
               <ul className="border-t border-rule">
                 {g.passes.map((p) => (
-                  <li key={p.id} className="border-b border-rule">
+                  <li key={p.id} className="pass-select-row border-b border-rule">
+                    {onToggleImage && <input
+                      type="checkbox"
+                      checked={selectedImageIds.includes(p.id)}
+                      onChange={() => onToggleImage && onToggleImage(p)}
+                      disabled={disabled}
+                      aria-label={`Incluir imagem ${p.id}`}
+                    />}
                     <button
                       type="button"
                       disabled={disabled}

@@ -1,24 +1,23 @@
-// Display names for regions. The API returns official IBGE names in Portuguese.
-// State names are proper names and stay as they are; the country and the five macro-regions get English names.
-// This is the only place that maps them.
+// Nomes de exibição das regiões. A API retorna nomes oficiais do IBGE em português.
+// Estados mantêm seus nomes próprios; país e macrorregiões são mapeados aqui.
 import type { Region } from "./types";
 
-export const REGION_NAMES_EN: Readonly<Record<string, string>> = {
-  br: "Brazil",
-  norte: "North",
-  nordeste: "Northeast",
-  "centro-oeste": "Central-West",
-  sudeste: "Southeast",
-  sul: "South",
+export const REGION_NAMES_PT: Readonly<Record<string, string>> = {
+  br: "Brasil",
+  norte: "Norte",
+  nordeste: "Nordeste",
+  "centro-oeste": "Centro-Oeste",
+  sudeste: "Sudeste",
+  sul: "Sul",
 };
 
-/** Short display name: "Brazil", "South", "Rio Grande do Sul". */
+/** Nome curto de exibição. */
 export function regionName(region: Pick<Region, "id" | "name">): string {
-  return REGION_NAMES_EN[region.id] ?? region.name;
+  return REGION_NAMES_PT[region.id] ?? region.name;
 }
 
-/** Name for use inside a sentence: "Brazil", "the South region", "Rio Grande do Sul". */
+/** Nome para uso em frases. */
 export function regionNameInSentence(region: Pick<Region, "id" | "name" | "kind">): string {
-  if (region.kind === "region") return `the ${regionName(region)} region`;
+  if (region.kind === "region") return `região ${regionName(region)}`;
   return regionName(region);
 }

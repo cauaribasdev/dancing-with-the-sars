@@ -1,7 +1,9 @@
+import { HomeEntry } from "../features/home/HomePage";
 import { createBrowserRouter } from "react-router";
+import { AlertsPage } from "../features/alerts/AlertsPage";
 import { ComparePage } from "../features/compare/ComparePage";
 import { OverviewPage } from "../features/overview/OverviewPage";
-import { RegionPage } from "../features/region/RegionPage";
+import { StatePage } from "../features/region/StatePage";
 import { StoryPage } from "../features/story/StoryPage";
 import { Layout } from "./Layout";
 import { NotFoundPage } from "./NotFoundPage";
@@ -14,8 +16,10 @@ export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { index: true, element: <OverviewPage /> },
-      { path: "region/:regionId", element: <RegionPage /> },
+      { index: true, element: <HomeEntry /> },
+      { path: "explore", element: <OverviewPage /> },
+      { path: "alerts", element: <AlertsPage /> },
+      { path: "region/:regionId", element: <StatePage /> },
       { path: "story/:storyId", element: <StoryPage /> },
       { path: "compare", element: <ComparePage /> },
       { path: "*", element: <NotFoundPage /> },

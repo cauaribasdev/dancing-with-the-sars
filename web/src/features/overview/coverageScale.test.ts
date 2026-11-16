@@ -35,8 +35,8 @@ describe("coverage scale", () => {
   });
 
   it("describes classes in words", () => {
-    expect(coverageClassLabel(7)).toBe("6 to 9 days with a pass");
-    expect(coverageClassLabel(25)).toBe("20 or more days with a pass");
-    expect(coverageClassLabel(0)).toBe("no days with a pass");
+    expect(coverageClassLabel(7)).toBe("6 a 9 dias com passagem");
+    expect(coverageClassLabel(25)).toBe("20 ou mais dias com passagem");
+    expect(coverageClassLabel(0)).toBe("nenhum dia com passagem");
   });
 });

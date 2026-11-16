@@ -1,4 +1,3 @@
-import "@fontsource-variable/archivo/wdth.css";
 import "@fontsource-variable/source-serif-4/opsz-italic.css";
 import "./app/styles.css";
 import { StrictMode } from "react";

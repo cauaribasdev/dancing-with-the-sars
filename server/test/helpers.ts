@@ -98,5 +98,20 @@ export const fakeBrowse: BrowseService = {
 let regions: RegionIndex | undefined;
 export function testDeps(passes: Pass[]): Deps & { catalog: ReturnType<typeof fakeCatalog> } {
   regions ??= RegionIndex.fromFile();
-  return { regions, catalog: fakeCatalog(passes), browse: fakeBrowse, limits: { maxRangeDays: config.maxRangeDays } };
+  return {
+    regions,
+    catalog: fakeCatalog(passes),
+    browse: fakeBrowse,
+    alerts: {
+      async findAlerts() {
+        return { alerts: [], updatedAt: '2026-11-15T12:00:00.000Z', source: 'live' };
+      },
+    },
+    organizations: {
+      async findOrganizations() {
+        return { organizations: [], total: 0, snapshotDate: '2026-08-18', source: 'live' };
+      },
+    },
+    limits: { maxRangeDays: config.maxRangeDays },
+  };
 }

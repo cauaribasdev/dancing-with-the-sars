@@ -4,7 +4,7 @@ import { formatDateLong, formatDayShort, plural } from "../../ui/format";
 import { SectionTitle } from "../../ui/MapPageLayout";
 import { buildCalendar } from "./regionLogic";
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 interface Props {
   window: DateWindow;
@@ -22,15 +22,15 @@ export function DayCalendar({ window, timeline, selectedDay, onSelectDay, disabl
   return (
     <section className="flex flex-col gap-2" aria-labelledby="days-title">
       <div className="flex items-baseline justify-between gap-3">
-        <SectionTitle id="days-title">Days with a pass</SectionTitle>
+        <SectionTitle id="days-title">Dias com passagem</SectionTitle>
         {selectedDay ? (
           <button type="button" className="link text-[13px]" onClick={() => onSelectDay(null)}>
-            Show all days
+            Mostrar todos os dias
           </button>
         ) : null}
       </div>
       <p className="text-[13px] leading-snug text-ink-3">
-        The number is how many passes that day had. Pick a day to show only its passes.
+        O número indica quantas passagens ocorreram no dia. Selecione uma data para ver essas passagens.
       </p>
       <div className={`grid grid-cols-7 gap-1 ${disabled ? "opacity-40" : ""}`} aria-busy={disabled || undefined}>
         {WEEKDAYS.map((d) => (
@@ -44,7 +44,7 @@ export function DayCalendar({ window, timeline, selectedDay, onSelectDay, disabl
           const label = cell.day === 1 || cell.date === window.start ? formatDayShort(cell.date) : String(cell.day);
           if (cell.passes === 0) {
             return (
-              <div key={cell.date} className="num flex h-11 flex-col px-1 pt-0.5 text-[11px] text-ink-3" title={`${formatDateLong(cell.date)}: no pass`}>
+              <div key={cell.date} className="num flex h-11 flex-col px-1 pt-0.5 text-[11px] text-ink-3" title={`${formatDateLong(cell.date)}: sem passagem`}>
                 {label}
               </div>
             );
@@ -56,7 +56,7 @@ export function DayCalendar({ window, timeline, selectedDay, onSelectDay, disabl
               type="button"
               disabled={disabled}
               aria-pressed={selected}
-              aria-label={`${formatDateLong(cell.date)}: ${plural(cell.passes, "pass", "passes")}`}
+              aria-label={`${formatDateLong(cell.date)}: ${plural(cell.passes, "passagem", "passagens")}`}
               onClick={() => onSelectDay(selected ? null : cell.date)}
               className={`num flex h-11 flex-col rounded-[3px] border px-1 pt-0.5 text-left transition-colors ${
                 selected ? "border-ink bg-signal-wash" : "border-rule bg-sheet hover:border-rule-strong"
