@@ -9,3 +9,8 @@ describe('regional URL contract A03–A05', () => {
  it('rejects invalid tab and day', () => { const r=parse('tab=invalid&day=2020-01-01&pass=x'); expect(r.warning).toBe(true); expect(r.params.get('tab')).toBe('overview'); expect(r.params.has('day')).toBe(false); expect(r.params.has('pass')).toBe(false); });
  it('is idempotent and preserves selection across tabs', () => { const r=parse('tab=help&day=2026-11-01&pass=x'); expect(parse(r.params.toString()).params.toString()).toBe(r.params.toString()); expect(r.params.get('pass')).toBe('x'); });
 });
+it('clears a composition when the requested period is invalid',()=>{
+ const r=parse('tab=radar&start=bad&images=selection&image=a&image=b&day=2026-11-01');
+ expect(r.params.getAll('image')).toEqual([]);
+ expect(r.params.has('images')).toBe(false);
+});

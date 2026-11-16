@@ -87,14 +87,14 @@ export function BeforeAfterMap({ before, after, initialBbox, pairBbox, initialSi
       <div className="absolute left-3 top-3 flex flex-col gap-2">
         {loading.length > 0 ? <LoadingBox sides={loading} images={images} /> : null}
         {problems.map((s) => (
-          <BrowseImageStatus key={s} image={images[s].image} label={`${s} image (${formatDateLong(images[s].date)})`} />
+          <BrowseImageStatus key={s} image={images[s].image} label={`${s === "before" ? "imagem anterior" : "imagem posterior"} (${formatDateLong(images[s].date)})`} />
         ))}
       </div>
       <div className="absolute inset-x-3 bottom-14 flex sm:bottom-8 flex-col items-center gap-1.5">
         <SideSwitch side={side} onChange={setSide} images={images} />
         <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-[4px] bg-sheet/95 px-3 py-1.5 text-[12px] text-ink-2 shadow-[0_0_0_1px_var(--color-rule)]">
           <span className="hidden sm:inline">
-            <Kbd>Space</Kbd> flips the image, <Kbd>B</Kbd> before, <Kbd>A</Kbd> after
+            <Kbd>Espaço</Kbd> alterna as imagens; <Kbd>B</Kbd> mostra a anterior; <Kbd>A</Kbd>, a posterior
           </span>
           <label className="flex cursor-pointer items-center gap-1.5 text-ink">
             <input
@@ -103,12 +103,12 @@ export function BeforeAfterMap({ before, after, initialBbox, pairBbox, initialSi
               onChange={(e) => setShowOutline(e.target.checked)}
               className="size-3.5 accent-ink"
             />
-            Usual water outline (from the basemap)
+            Contorno de água habitual (do mapa base)
           </label>
         </div>
       </div>
       <p className="sr-only" aria-live="polite">
-        Showing the {side} image, {formatDateLong(images[side].date)}.
+        Exibindo a imagem {side === "before" ? "anterior" : "posterior"}, {formatDateLong(images[side].date)}.
       </p>
     </>
   );
@@ -140,7 +140,7 @@ function Kbd({ children }: { children: ReactNode }) {
   );
 }
 
-const SIDE_LABEL: Record<Side, string> = { before: "Before", after: "After" };
+const SIDE_LABEL: Record<Side, string> = { before: "Antes", after: "Depois" };
 
 /**
  * The two-date switch. The shown image is a block of ink with a signal-yellow edge; the other is paper.
@@ -158,7 +158,7 @@ function SideSwitch({
   return (
     <div
       role="group"
-      aria-label="Radar image shown on the map"
+      aria-label="Imagem de radar exibida no mapa"
       className="pointer-events-auto flex w-full max-w-[400px] overflow-hidden rounded-[4px] shadow-[0_0_0_1.5px_var(--color-ink),0_6px_18px_-8px_rgb(22_32_42/0.55)]"
     >
       {(["before", "after"] as const).map((s) => {
@@ -170,9 +170,9 @@ function SideSwitch({
             ? null
             : isLoading(image)
               ? pct
-                ? `Loading ${Math.round(pct * 100)}%`
-                : "Loading…"
-              : "Not shown";
+                ? `Carregando ${Math.round(pct * 100)}%`
+                : "Carregando…"
+              : "Não exibida";
         return (
           <button
             key={s}
@@ -187,7 +187,7 @@ function SideSwitch({
             <span className="flex w-full items-baseline justify-between gap-2">
               <span className="text-[17px] font-[680] leading-tight">{SIDE_LABEL[s]}</span>
               {active ? (
-                <span className="text-[11px] font-[600] leading-tight text-signal">Showing</span>
+                <span className="text-[11px] font-[600] leading-tight text-signal">Exibindo</span>
               ) : null}
             </span>
             <span className={`num text-[14px] leading-snug ${active ? "text-paper" : "text-ink-2"}`}>{formatDateLong(date)}</span>
@@ -213,7 +213,7 @@ function LoadingBox({
       role="status"
       className="pointer-events-auto w-[min(300px,calc(100vw-2rem))] rounded-[4px] bg-sheet px-3 py-2.5 text-[13px] leading-snug text-ink shadow-[0_0_0_1px_var(--color-rule)]"
     >
-      <p className="mb-2">Downloading the radar {sides.length > 1 ? "images" : "image"} from NASA's archive</p>
+      <p className="mb-2">Baixando {sides.length > 1 ? "as imagens" : "a imagem"} de radar do arquivo da NASA</p>
       <div className="flex flex-col gap-2">
         {sides.map((s) => {
           const pct = progressOf(images[s].image);
@@ -225,12 +225,12 @@ function LoadingBox({
                 </span>
                 <span>{pct ? `${Math.round(pct * 100)}%` : ""}</span>
               </span>
-              <ProgressBar value={pct ?? undefined} label={`Loading the ${s} image`} />
+              <ProgressBar value={pct ?? undefined} label={`Carregando a imagem ${s === "before" ? "anterior" : "posterior"}`} />
             </div>
           );
         })}
       </div>
-      <p className="mt-2 text-[12px] text-ink-3">Each image is 2 to 7 MB, so this can take a few seconds.</p>
+      <p className="mt-2 text-[12px] text-ink-3">Cada imagem tem de 2 a 7 MB e o carregamento pode levar alguns segundos.</p>
     </div>
   );
 }

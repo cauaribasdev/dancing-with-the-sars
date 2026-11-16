@@ -4,6 +4,8 @@
  */
 import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson';
 import type { BrowseGeoref } from '../domain/georef';
+import type { WeatherAlert } from '../domain/alerts';
+import type { Organization } from '../domain/organizations';
 import type { BBox, DataSource, Pass, ProductId } from '../domain/pass';
 import type { Region, RegionKind, RegionSummary } from '../domain/region';
 
@@ -43,6 +45,20 @@ export interface BrowseService {
   describe(pass: Pass): Promise<BrowseInfo>;
 }
 
+/** Nationwide alert snapshot from the INMET CAP catalog. */
+export interface AlertCatalog {
+  findAlerts(): Promise<{ alerts: WeatherAlert[]; updatedAt: string; source: DataSource }>;
+}
+
+export interface OrganizationCatalog {
+  findOrganizations(stateId: string, areaIds: string[]): Promise<{
+    organizations: Organization[];
+    total: number;
+    snapshotDate: string;
+    source: DataSource;
+  }>;
+}
+
 /** Brazilian country / macro-regions / states and geometric tests against them. */
 export interface RegionRepository {
   get(id: string): Region | undefined;
@@ -61,5 +77,7 @@ export interface Deps {
   regions: RegionRepository;
   catalog: Catalog;
   browse: BrowseService;
+  alerts: AlertCatalog;
+  organizations: OrganizationCatalog;
   limits: Limits;
 }

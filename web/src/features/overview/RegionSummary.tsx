@@ -19,12 +19,12 @@ interface Props {
 
 function Facts({ s, period }: { s: CoverageSummary; period: DateWindow }) {
   const rows: [string, string][] = [
-    ["Passes", formatNumber(s.acquisitions)],
-    ["Different image strips", formatNumber(s.stacks)],
+    ["Passagens", formatNumber(s.acquisitions)],
+    ["Faixas de imagem distintas", formatNumber(s.stacks)],
   ];
-  if (s.firstDate && s.lastDate) rows.push(["First and last", formatDayRange(s.firstDate, s.lastDate)]);
-  if (s.medianGapDays != null) rows.push(["Typical gap", plural(s.medianGapDays, "day", "days")]);
-  rows.push(["Period checked", plural(daysInclusive(period), "day", "days")]);
+  if (s.firstDate && s.lastDate) rows.push(["Primeira e última", formatDayRange(s.firstDate, s.lastDate)]);
+  if (s.medianGapDays != null) rows.push(["Intervalo típico", plural(s.medianGapDays, "dia", "dias")]);
+  rows.push(["Período consultado", plural(daysInclusive(period), "dia", "dias")]);
   return (
     <dl className="grid grid-cols-[1fr_auto] gap-x-4 border-t border-rule text-[14px]">
       {rows.map(([k, v]) => (
@@ -74,21 +74,21 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
     <div className="flex flex-col gap-4" aria-live="polite">
       <div>
         <h2 className="place text-[26px] leading-tight text-ink">{regionName(region)}</h2>
-        {parent && parent.kind === "region" ? <p className="text-[13px] text-ink-3">{regionName(parent)} region</p> : null}
-        {region.kind === "region" ? <p className="text-[13px] text-ink-3">Macro-region of Brazil</p> : null}
+        {parent && parent.kind === "region" ? <p className="text-[13px] text-ink-3">Região {regionName(parent)}</p> : null}
+        {region.kind === "region" ? <p className="text-[13px] text-ink-3">Macrorregião do Brasil</p> : null}
       </div>
 
       {pending ? (
-        <p className="text-[15px] text-ink-3">Counting passes in {monthLabel}…</p>
+        <p className="text-[15px] text-ink-3">Contando passagens em {monthLabel}…</p>
       ) : summary ? (
         <p className="text-[16px] leading-[1.5] text-ink">
           {summary.distinctDates > 0 ? (
             <>
-              In {monthLabel}, the radar passed over {name} on{" "}
-              <strong className="num font-[700]">{plural(summary.distinctDates, "day", "days")}</strong>.
+              Em {monthLabel}, o radar passou sobre {name} em{" "}
+              <strong className="num font-[700]">{plural(summary.distinctDates, "dia", "dias")}</strong>.
             </>
           ) : (
-            <>The radar did not pass over {name} in {monthLabel}.</>
+            <>O radar não passou sobre {name} em {monthLabel}.</>
           )}
         </p>
       ) : null}
@@ -98,7 +98,7 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
       {!pending && shownChildren.length ? (
         <div className="flex flex-col gap-1.5">
           <h3 className="text-[13px] font-medium text-ink-2">
-            {region.kind === "country" ? "States with the most days with a pass" : "Days with a pass, by state"}
+            {region.kind === "country" ? "Estados com mais dias observados" : "Dias com passagem, por estado"}
           </h3>
           <ul className="border-t border-rule text-[14px]">
             {shownChildren.map((s) => (
@@ -110,7 +110,7 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
                 >
                   <Swatch days={s.distinctDates} />
                   <span className="flex-1">{s.name}</span>
-                  <span className="num font-[600]">{plural(s.distinctDates, "day", "days")}</span>
+                  <span className="num font-[600]">{plural(s.distinctDates, "dia", "dias")}</span>
                 </button>
               </li>
             ))}
@@ -118,8 +118,8 @@ export function RegionSummary({ region, regions, coverage, period, month, pendin
         </div>
       ) : null}
 
-      <Link to={paths.region(region.id, period)} className="link self-start text-[15px]">
-        See the passes over {name}
+      <Link to={`${paths.region(region.id, period)}&tab=radar`} className="link self-start text-[15px]">
+        Ver passagens de {region.name}
       </Link>
     </div>
   );

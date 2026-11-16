@@ -1,0 +1,123 @@
+# Plano para fechar o projeto
+
+Este plano transforma as pendências do inventário em entregas revisáveis. A prioridade é um produto confiável e demonstrável com dados reais disponíveis; fonte indisponível deve aparecer como indisponível, nunca como dado real sintético.
+
+## Estado de partida
+
+- Branch de trabalho: `feat/home-e-exploracao`, baseada na cadeia local de commits de redesign, navegação e composição; a alteração preexistente em `.gitignore` foi preservada fora do commit.
+- Home, exploração nacional/estadual, Radar, comparação e história já estavam implementados. Esta execução acrescenta endpoints e integrações de INMET, IPEA e Posts, além de uma página dedicada a alertas ativos/histórico e navegação visível no cabeçalho.
+- `server/` agora inclui adaptadores CAP/WIS2 e CSV IPEA, rotas e cache; o feed de Posts deriva do catálogo existente.
+- PRs #1–#4 continuam abertas como dependências; a PR consolidada #5 foi publicada contra `feat/frontend-prototipo`.
+- Permanecem limites externos: o CSV do IPEA observado tem centenas de MB e está antigo; categorias de habitação e comunidades/favelas não são campos independentes nele. Campanhas GlobalGiving não estão configuradas; Safari e leitor de tela não foram validados neste ambiente.
+
+## Princípios de aceite
+
+1. Cada funcionalidade externa tem contrato versionado, origem, atribuição, atualização e estados de vazio/erro/stale definidos.
+2. Fixtures são identificadas e habilitadas apenas em desenvolvimento; nunca são confundidas com dados reais.
+3. Falha numa fonte complementar não bloqueia Radar, história ou comparação.
+4. Nenhuma métrica de inundação ou detecção automática é inferida das prévias PNG.
+5. Toda tarefa delegada ao agente local tem um único arquivo de saída permitido, teste reproduzível e revisão de diff pelo tech lead.
+6. PRs devem formar uma cadeia de bases válida; publicar não implica merge.
+
+## Marcos
+
+### F0 — Baseline e plano
+
+- Registrar plano, dependências entre PRs, configuração disponível e comandos atuais.
+- Confirmar `npm test`, `npm run typecheck` e `npm run build` antes de mudanças de produto.
+- Aceite: baseline reproduzível e working tree preexistente preservada.
+
+### F1 — Contratos e fixtures
+
+- Definir schemas JSON/OpenAPI para rotas existentes e para fontes opcionais, incluindo respostas e erros, `dataSource`, timestamps, campos opcionais e semântica de vazios.
+- Marcar claramente as limitações dos contratos conforme capacidades verificadas das fontes.
+- Produzir fixtures válidas por contrato, exemplos vazios e falhas parciais.
+- Aceite: validação automática de fixtures e documentação sem alegar integração que não existe.
+
+### F2 — Robustez do servidor e fontes
+
+- Implementar adaptadores isolados e cache para fontes cuja API e licença estejam verificadas; timeout, rate limit, parsing defensivo, atribuição e stale.
+- Para INMET: filtrar alertas por município/UF via código IBGE, converter CAP lat/lon corretamente, ordenar e expirar alertas pelo relógio.
+- Para IPEA: áreas, proximidade, limite, metadados do snapshot e distinção entre campanhas ausentes/vazias/falha.
+- Posts automáticos: gerar apenas a partir de passagens/pares/histórias existentes, sem alegar detecção; links tipados e ordenação determinística.
+- Aceite: testes de contrato e casos de falha; nenhuma chamada externa nos testes unitários.
+
+### F3 — Integração frontend
+
+- Trocar feeds demo por hooks reais quando endpoints estiverem disponíveis, manter demo exclusivamente opt-in em dev.
+- Completar Overview (história, par, emergência), Alerts, Posts e Help com estados independentes, freshness, retry e sem dados de outro estado/período.
+- Criar a página `/alerts` para avisos ativos e encerrados no snapshot CAP móvel de oito dias, com filtro por estado.
+- Tornar alertas visíveis no cabeçalho e substituir as contagens circulares ambíguas sobre o mapa por um link para a página dedicada.
+- Aceite: chaves de cache completas, AbortSignal, ausência/erro/stale distintos e integração por feature documentada.
+
+### F4 — Qualidade e acessibilidade
+
+- Cobrir critérios A01–A24 e jornadas de links antigos, navegação/voltar/recarregar, troca de UF/período, composição, falhas independentes e links de Posts.
+- Executar E2E em Chromium e inspeção manual de teclado, leitor de tela, zoom, foco, contraste, movimento reduzido e larguras 320/390/1024/1280.
+- Validar Firefox/Safari quando ambientes estiverem disponíveis; registrar limitações sem alegar conformidade certificada.
+- Tradução: traduzir interface própria legada para português; preservar textos oficiais do INMET e idioma original de narrativas/citações com indicação de idioma.
+- Aceite: evidências anexadas ao inventário e regressão completa aprovada.
+
+### F5 — Entrega e publicação
+
+- Atualizar README, rotas, inventário, aceite e instruções de deploy (API, CORS, `VITE_API_BASE`, fallback SPA e cache).
+- Executar testes, typecheck, build, smokes e validação de contratos; rever diffs por arquivo.
+- Reconciliar PRs #1–#4 e publicar a cadeia consolidada com bases existentes, sem merge automático.
+- Aceite: PR #5 aberta e interligada à base correta, descrição inclui escopo, evidências e limitações; arquivos locais do agente permanecem fora do commit.
+
+## Execução e dependências
+
+Ordem: F0 → F1 → F2/F4 em paralelo lógico → F3 → F4 final → F5. A parte de F2 referente a fontes reais depende de APIs acessíveis e condições de uso verificáveis. Se não houver fonte ou credencial pública, entregar adapter de indisponibilidade e contrato explícito, mantendo a integração real como bloqueio declarado; não simular sucesso.
+
+Cada incremento será delegado pelo `./junior.sh` conforme `AGENTS.md`, em branch Git de trabalho e com arquivos delimitados. O tech lead revisará diffs e repetirá validações antes de incorporar. Nenhuma PR será mesclada sem autorização específica.
+
+### Verificação atual de fontes (2026-11-15)
+
+- INMET documenta seus avisos no portal oficial e publica notificações CAP no nó WIS2 `wis2bra.inmet.gov.br`. A API WIS2 consultada retorna notificações com links XML, mas a amostra recebida era de setembro enquanto o portal já mostrava avisos de novembro; a aplicação deve medir a idade da última publicação e marcar os dados como `stale` quando ultrapassarem o limite configurado. Fonte: [API WIS2 do INMET](https://wis2bra.inmet.gov.br/oapi/openapi), [portal de avisos](https://avisos.inmet.gov.br/).
+- O IPEA oferece [API pública](https://mapaosc.ipea.gov.br/api/api/documentation), [tabela oficial de áreas](https://mapaosc.ipea.gov.br/api/api/area_atuacao) e [bases mensais para download](https://mapaosc.ipea.gov.br/base-dados). O CSV geral tem cerca de 344 MB, inclui CNPJ, situação, UF, coordenadas e flags de área, mas não o id interno de perfil. A consulta ao vivo da tabela confirmou que 1 é Habitação, 2 Saúde, 5 Assistência social e 12 OSCs em comunidades/favelas. O CSV atual tem colunas para 2 e 5, mas não 1 ou 12. A importação streaming produz cache compacto e usa stale após 45 dias; a primeira carga sem cache pode demorar vários minutos e exige `CACHE_DIR` persistente.
+- O adaptador IPEA passou também pela carga fria completa: snapshot de 2026-08-18, 3.832 organizações no RS, marcado como `stale` pelo limite de 45 dias. A importação levou vários minutos e gravou cache compacto em `CACHE_DIR`; não há CSV bruto no repositório.
+
+## Progresso
+
+- [x] F0 inspeção inicial e registro do plano.
+- [x] F0 baseline de comandos na branch de trabalho: testes 33 servidor + 89 web; typecheck e build passaram.
+- [x] F1 schemas Zod e especificação OpenAPI 3.1 dos três feeds; testes verificam fixtures e referências.
+- [x] F2 rotas, contratos, cache e adaptadores INMET, IPEA e Posts; 62 testes do servidor passam. A carga fria IPEA foi concluída e o cache pré-aquecido foi validado.
+- [x] F3 integração dos painéis de fonte, paginação, página dedicada `/alerts` e histórico de oito dias; consultas têm cache keys próprias e AbortSignal. Cabeçalho reorganizado com marca SAR, navegação destacada e adaptação para celulares; o mapa encaminha para a lista, sem círculos/contagens sobre polígonos.
+- [ ] F4 parcial: 153 testes (62 servidor + 91 web), typecheck e build passam. Smokes Chromium com fixtures para busca estadual, radar diário, composição multiday, recorte territorial e `/alerts` passaram. O smoke da home foi repetido, mas expirou após 120 s aguardando as imagens externas; o endpoint ASF respondeu aos headers, porém o corpo de 5,2 MB não concluiu em 35 s no Chromium. Essa repetição não confirma a jornada da home nesta execução. Axe em `/alerts` no Chromium e Firefox: zero violações WCAG A/AA; nas quatro rotas anteriores (`/`, `/explore`, `/region/rs?tab=alerts`, `/compare`) há evidência registrada no inventário. Primeiro foco “Pular para o conteúdo”; `prefers-reduced-motion` reconhecido. Ainda não houve revisão com leitor de tela, Safari ou zoom; A01–A24 não têm aceite completo.
+- [x] F5 PR #5 publicada e aberta contra `feat/frontend-prototipo`; sem merge. PRs #1–#4 permanecem abertas como dependências upstream.
+
+Atualização (2026-11-15): Playwright foi instalado temporariamente fora do repositório. Browser smokes cobrem cabeçalho em 320/390 px, clique direto no polígono SC, restauração de aba/período/dia/passagem com voltar/avançar/reload, limpeza de seleção ao trocar mês/UF e detalhes acessíveis com georreferenciamento nulo. O smoke stale confirma dados preservados e botão de atualizar no Overview e em Publicações. Também reproduziu a divergência de `/alerts?region=sc`: a API local antiga devolve `summary.active > 0` com `alerts: []` para `include=history`, enquanto `include=recent` contém os ativos; a página agora recupera os avisos e informa que o histórico pode cobrir apenas 48 horas. Uma instância limpa da API retorna normalmente o histórico de oito dias.
+
+### Auditoria por critério A01–A24 (2026-11-15)
+
+O arquivo [frontend-aceite.md](frontend-aceite.md) continua sendo a especificação original; esta tabela registra evidência encontrada nesta branch. “Parcial” significa que a jornada tem cobertura relacionada, mas não cobre todos os passos/ambientes do critério.
+
+| Critério | Status atual | Evidência / lacuna concreta |
+|---|---|---|
+| A01 | Verificado por smoke | `territorial-smoke.mjs` seleciona SC clicando no mapa nacional; a URL corresponde à UF escolhida depois pela lista. |
+| A02 | Verificado por smoke | `state-search-smoke.mjs` abre `br`, macrorregião e UF desconhecida; cada caminho mostra página não encontrada e volta ao mapa. |
+| A03 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem links sem `tab` com `day`/`pass`, normalizados para Radar. |
+| A04 | Verificado por unidade + smoke | O smoke abre `/region/sc` sem parâmetros, confirma Overview e normalização de URL/período. |
+| A05 | Verificado por unidade + smoke | `navigation.test.ts` e `state-search-smoke.mjs` cobrem aba/período inválidos, aviso e limpeza de seleção. |
+| A06 | Verificado por smoke | `multiday-radar-smoke.mjs` alterna Radar/Alertas, usa voltar/avançar e reload, confirmando restauração de aba, período, dia e passagem selecionada. |
+| A07 | Verificado por smoke | `multiday-radar-smoke.mjs` confirma que trocar mês ou UF limpa dia/passagem/composição e preserva o período apropriado. |
+| A08 | Verificado por smoke | `alerts-smoke.mjs` libera a resposta atrasada de RS depois da resposta vazia de SC e confirma que a tela continua em SC. |
+| A09 | Verificado em unidade + smoke | `pairs.test.ts` verifica mediana nula; `state-search-smoke.mjs` confirma “Dados insuficientes” no Overview. |
+| A10 | Verificado em unidade + smoke | `pairs.test.ts` verifica ausência/desempate; `state-search-smoke.mjs` confirma “Nenhum par disponível” no Overview. |
+| A11 | Verificado por smoke | `compare-smoke.mjs` abre URL com geometrias diferentes e confirma o aviso e os dados de faixa. |
+| A12 | Verificado em unidade + smoke | `browseImage.test.ts` cobre georef nula/baixa; `daily-radar-smoke.mjs` confirma que georef nula impede download/posicionamento e mantém detalhes e link do produto. |
+| A13 | Verificado por smoke | `compare-smoke.mjs` cobre falha/retry de imagem; `webgl-smoke.mjs` bloqueia os contextos WebGL, confirma aviso acessível, tentativa de reinicialização e detalhes da comparação preservados. |
+| A14 | Verificado por smoke | `alerts-smoke.mjs` cobre listas vazias, ativos/histórico preenchidos e recupera alertas ativos quando a resposta `history` é inconsistente com `summary.active`. |
+| A15 | Verificado por smoke | `alerts-smoke.mjs` injeta INMET 503, confirma retry e navega ao Radar estadual com os demais endpoints funcionais. |
+| A16 | Adaptado | Os selos no mapa foram removidos a pedido do usuário por serem ambíguos; `app.test.ts` confirma o filtro de municípios RS/SC na API usada pela página dedicada. |
+| A17 | Verificado em unidade + smoke | Expiração muda de ativo para histórico com relógio do navegador avançado, sem novo fetch. |
+| A18 | Verificado por smoke | `alerts-smoke.mjs` força timezone local de São Paulo e confirma o dia e hora UTC do CAP na virada local de dia. |
+| A19 | Verificado por smoke | `stale-smoke.mjs` confirma dados stale preservados e atualização por botão no Overview e em Posts; smokes de Alertas e Help também cobrem stale. |
+| A20 | Verificado por smoke | `alerts-smoke.mjs` confirma que uma resposta antiga, liberada depois da UF atual, não substitui os dados da UF selecionada. |
+| A21 | Verificado por smoke | `help-smoke.mjs` distingue serviço indisponível (alerta/retry) de resultado vazio (mensagem vazia sem erro). |
+| A22 | Verificado por smoke | `help-smoke.mjs` dá resposta vazia de campanhas e confirma que a interface não inventa motivo. |
+| A23 | Verificado por smoke | `help-smoke.mjs` arrasta o mapa e confirma que a distância/reference permanece estável sem nova consulta. |
+| A24 | Parcial | `/alerts` smoke usa teclado, expansão de texto longo, UTC e viewports 390/320 px; leitor de tela, Safari, zoom e foco via inspeção visual ainda faltam. |
+
+O smoke territorial passou após restringir o seletor à navegação “Seções do estado”; o seletor anterior se tornou ambíguo com o link global “Alertas”.

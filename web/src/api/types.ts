@@ -68,6 +68,35 @@ export interface CoverageResponse {
 export type Direction = "ascending" | "descending";
 export type Maturity = "validated" | "provisional" | "beta";
 
+export type AlertSeverity = "minor" | "moderate" | "severe" | "extreme";
+export type AlertStatus = "active" | "expired";
+
+export interface WeatherAlert {
+  id: string;
+  sent: string;
+  event: string;
+  severity: AlertSeverity;
+  color: string;
+  onset: string;
+  expires: string;
+  headline: string;
+  description: string;
+  instruction: string;
+  url: string;
+  municipalities: { code: string; name: string }[];
+  municipalityCountTotal: number;
+  geometry: Polygon | MultiPolygon | null;
+  status: AlertStatus;
+}
+
+export interface AlertsResponse {
+  dataSource: DataSource;
+  region: Region;
+  updatedAt: string;
+  summary: { active: number; highestSeverity: AlertSeverity | null };
+  alerts: WeatherAlert[];
+}
+
 export interface Pass {
   id: string;
   conceptId: string;

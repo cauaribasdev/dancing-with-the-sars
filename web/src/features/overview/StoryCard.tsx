@@ -25,12 +25,13 @@ export function StoryCard({ story, detail }: { story: StoryListItem; detail?: St
           <h2 id="story-card-title" className="text-[17px] font-[650] leading-snug text-ink">
             {story.title}
           </h2>
-          <p className="text-[13px] text-ink-3">Event on {formatDateLong(story.eventDate)}</p>
+          <p className="text-[13px] text-ink-3">Evento em {formatDateLong(story.eventDate)}</p>
+          <p className="text-[12px] text-ink-3">Título e narrativa no idioma original (inglês).</p>
         </div>
       </div>
       <p className="text-[14px] leading-[1.55] text-ink-2">{story.subtitle}</p>
       <Link to={paths.story(story.id)} className="btn-primary self-start text-[15px]">
-        See before and after
+        Ver antes e depois
       </Link>
     </section>
   );

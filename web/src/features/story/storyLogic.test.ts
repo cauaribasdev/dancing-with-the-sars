@@ -41,13 +41,13 @@ describe("featured and other pairs", () => {
 
 describe("pair text", () => {
   it("names both dates", () => {
-    expect(pairDates(pair({ id: "p" }))).toBe("Jul 11 and Jul 23");
+    expect(pairDates(pair({ id: "p" }))).toBe("11 de jul. e 23 de jul.");
   });
 
   it("says how far each pass is from the event", () => {
-    expect(pairTiming({ daysBeforeEvent: 11, daysAfterEvent: 1 })).toBe("11 days before the event and 1 day after");
-    expect(pairTiming({ daysBeforeEvent: 12, daysAfterEvent: 0 })).toBe("12 days before the event and on the event date");
-    expect(pairTiming({ daysBeforeEvent: 1, daysAfterEvent: 5 })).toBe("1 day before the event and 5 days after");
+    expect(pairTiming({ daysBeforeEvent: 11, daysAfterEvent: 1 })).toBe("11 dias antes do evento e 1 dia depois");
+    expect(pairTiming({ daysBeforeEvent: 12, daysAfterEvent: 0 })).toBe("12 dias antes do evento e na data do evento");
+    expect(pairTiming({ daysBeforeEvent: 1, daysAfterEvent: 5 })).toBe("1 dia antes do evento e 5 dias depois");
   });
 });
 

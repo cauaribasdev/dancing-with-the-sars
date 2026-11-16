@@ -16,6 +16,12 @@ export const config = {
   cacheTtlPastMs: num(process.env.CACHE_TTL_PAST_HOURS, 24 * 7) * 3_600_000,
   /** TTL for the current/recent week (new acquisitions keep arriving). */
   cacheTtlRecentMs: num(process.env.CACHE_TTL_RECENT_HOURS, 3) * 3_600_000,
+  inmetBaseUrl: process.env.INMET_BASE_URL ?? 'https://wis2bra.inmet.gov.br',
+  inmetCacheTtlMs: num(process.env.INMET_CACHE_TTL_MINUTES, 5) * 60_000,
+  inmetMaxAgeMs: num(process.env.INMET_MAX_AGE_HOURS, 24) * 3_600_000,
+  inmetTimeoutMs: num(process.env.INMET_TIMEOUT_MS, 15_000),
+  ipeaCsvUrl: process.env.IPEA_CSV_URL ?? 'https://mapaosc.ipea.gov.br/download/20260806_MOSC_baseDivulgacao.csv',
+  ipeaTimeoutMs: num(process.env.IPEA_TIMEOUT_MS, 600_000),
   requestTimeoutMs: num(process.env.CMR_TIMEOUT_MS, 90_000),
   cmrConcurrency: num(process.env.CMR_CONCURRENCY, 4),
   cmrPageSize: 2000,

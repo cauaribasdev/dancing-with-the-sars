@@ -12,7 +12,7 @@ export type BrowseImageState =
   | { status: "loading-image"; progress: number | null; georef: Georef }
   | { status: "ready"; imageUrl: string; georef: Georef }
   | { status: "unavailable"; reason: "no-georef" | "low-quality"; message: string }
-  | { status: "error"; message: string };
+  | { status: "error"; message: string; retry: () => void };
 
 /**
  * Fetches /api/passes/:id/browse, checks the georeferencing and downloads the PNG with progress.
@@ -23,6 +23,7 @@ export function useBrowseImage(passId: string | undefined): BrowseImageState {
   const browse = useBrowse(passId);
   const availability = useMemo(() => (browse.data ? browseAvailability(browse.data) : null), [browse.data]);
   const [image, setImage] = useState<{ url: string; blobUrl?: string; progress: number | null; error?: string }>();
+  const [retryCount, setRetryCount] = useState(0);
 
   const pngUrl = availability?.ok ? availability.url : undefined;
 
@@ -37,12 +38,12 @@ export function useBrowseImage(passId: string | undefined): BrowseImageState {
       (blobUrl) => {
         if (alive) setImage({ url: pngUrl, blobUrl, progress: 1 });
       },
-      (err: unknown) => {
+      () => {
         if (alive)
           setImage({
             url: pngUrl,
             progress: null,
-            error: err instanceof Error ? err.message : "Could not download the image from ASF.",
+            error: "Não foi possível baixar a imagem do arquivo ASF.",
           });
       },
     );
@@ -50,14 +51,14 @@ export function useBrowseImage(passId: string | undefined): BrowseImageState {
       alive = false;
       unsubscribe();
     };
-  }, [pngUrl]);
+  }, [pngUrl, retryCount]);
 
   if (!passId) return { status: "idle" };
-  if (browse.isError) return { status: "error", message: describeError(browse.error) };
+  if (browse.isError) return { status: "error", message: describeError(browse.error), retry: () => browse.refetch() };
   if (!availability) return { status: "loading-info" };
   if (!availability.ok) return { status: "unavailable", reason: availability.reason, message: availability.message };
   const current = image?.url === availability.url ? image : undefined;
-  if (current?.error) return { status: "error", message: current.error };
+  if (current?.error) return { status: "error", message: current.error, retry: () => setRetryCount((count) => count + 1) };
   if (current?.blobUrl) return { status: "ready", imageUrl: current.blobUrl, georef: availability.georef };
   return { status: "loading-image", progress: current?.progress ?? 0, georef: availability.georef };
 }

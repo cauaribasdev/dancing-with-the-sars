@@ -16,14 +16,14 @@ export function browseAvailability(info: BrowseInfo): BrowseAvailability {
       ok: false,
       reason: "no-georef",
       message:
-        "We could not work out where this image sits on the map, so it is not shown. The rest of the pass information still applies.",
+        "Não foi possível localizar esta imagem no mapa, então ela não será exibida. As demais informações da passagem continuam disponíveis.",
     };
   }
   if (g.quality === "low") {
     return {
       ok: false,
       reason: "low-quality",
-      message: `The computed position of this image is not reliable (off by ${g.rmsErrorPx.toFixed(1)} px), so it is not shown, to avoid drawing water in the wrong place.`,
+      message: `A posição calculada desta imagem não é confiável (erro de ${g.rmsErrorPx.toFixed(1)} px). Ela não será exibida para evitar representar a água no lugar errado.`,
     };
   }
   return { ok: true, url: info.url, corners: g.corners, georef: g };
@@ -82,7 +82,7 @@ function evict() {
 
 async function download(url: string, onProgress?: (fraction: number | null) => void): Promise<string> {
   const res = await fetch(url, { mode: "cors" });
-  if (!res.ok) throw new Error(`ASF answered ${res.status} when downloading the image.`);
+  if (!res.ok) throw new Error(`O arquivo da ASF respondeu com erro ${res.status} ao baixar a imagem.`);
 
   const total = Number(res.headers.get("content-length")) || 0;
   let blob: Blob;

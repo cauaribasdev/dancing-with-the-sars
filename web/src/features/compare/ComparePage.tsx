@@ -21,22 +21,22 @@ export function ComparePage() {
   const second = usePass(ids.after ?? undefined);
 
   const shell = (panel: ReactNode, map: ReactNode = <BaseMap />) => (
-    <MapPageLayout panelLabel="Comparison" panel={<div className="flex flex-col gap-6">{panel}</div>} map={map} />
+    <MapPageLayout panelLabel="Comparação" panel={<div className="flex flex-col gap-6">{panel}</div>} map={map} />
   );
   const back = (
     <Link to={paths.overview()} className="link self-start text-[14px]">
-      Back to the map
+      Voltar ao mapa
     </Link>
   );
 
   if (!ids.before || !ids.after) {
-    const missing = !ids.before && !ids.after ? "both passes" : !ids.before ? "the before pass" : "the after pass";
+    const missing = !ids.before && !ids.after ? "as duas passagens" : !ids.before ? "a passagem anterior" : "a passagem posterior";
     return shell(
       <>
-        <PageTitle>Before and after</PageTitle>
+        <PageTitle>Antes e depois</PageTitle>
         <p className="text-[15px] leading-[1.55] text-ink-2">
-          This address is missing {missing}. Pick two passes of the same place to compare them: open a state on the map to see
-          its passes.
+          Este endereço não informa {missing}. Selecione duas passagens do mesmo local para compará-las: abra um estado no mapa para ver
+          as passagens disponíveis.
         </p>
         {back}
       </>,
@@ -44,25 +44,25 @@ export function ComparePage() {
   }
 
   const failures = [
-    { label: "before", id: ids.before, query: first },
-    { label: "after", id: ids.after, query: second },
+    { label: "anterior", id: ids.before, query: first },
+    { label: "posterior", id: ids.after, query: second },
   ].filter((f) => f.query.isError);
   if (failures.length > 0) {
     return shell(
       <>
-        <PageTitle>Before and after</PageTitle>
+        <PageTitle>Antes e depois</PageTitle>
         {failures.map((f) => {
           const notFound = f.query.error instanceof ApiError && f.query.error.status === 404;
           return (
             <div key={f.label} className="flex flex-col gap-1.5">
               <ErrorMessage onRetry={notFound ? undefined : () => f.query.refetch()}>
-                The {f.label} pass could not be loaded. {describeError(f.query.error)}
+                Não foi possível carregar a passagem {f.label}. {describeError(f.query.error)}
               </ErrorMessage>
               <p className="num break-all text-[12px] text-ink-3">{f.id}</p>
             </div>
           );
         })}
-        <p className="text-[14px] text-ink-2">Check the address, or pick two passes of the same place from a state on the map.</p>
+        <p className="text-[14px] text-ink-2">Verifique o endereço ou escolha duas passagens do mesmo local em um estado no mapa.</p>
         {back}
       </>,
     );
@@ -71,10 +71,10 @@ export function ComparePage() {
   if (!first.data || !second.data) {
     return shell(
       <>
-        <PageTitle>Before and after</PageTitle>
+        <PageTitle>Antes e depois</PageTitle>
         <div className="flex flex-col gap-2">
-          <ProgressBar label="Loading the two passes" />
-          <p className="text-[14px] text-ink-2">Loading the two passes from NASA's catalog…</p>
+          <ProgressBar label="Carregando as duas passagens" />
+          <p className="text-[14px] text-ink-2">Carregando as passagens do catálogo da NASA…</p>
         </div>
       </>,
     );
@@ -88,44 +88,48 @@ export function ComparePage() {
   return shell(
     <>
       <header className="flex flex-col gap-3">
-        <PageTitle>Before and after</PageTitle>
+        <PageTitle>Antes e depois</PageTitle>
         <p className="text-[15px] leading-[1.55] text-ink-2">
           {notes.samePass
-            ? `One radar pass from ${formatDateLong(before.date)}.`
-            : `Two radar images ${plural(days, "day", "days")} apart, from ${formatDateLong(before.date)} and ${formatDateLong(after.date)}.${notes.sameGeometry ? " Flip between them on the map to see what changed." : " Flip between them on the map, but read the note below first."}`}
+            ? `Uma passagem de radar em ${formatDateLong(before.date)}.`
+            : `Duas imagens de radar com intervalo de ${plural(days, "dia", "dias")}, em ${formatDateLong(before.date)} e ${formatDateLong(after.date)}.${notes.sameGeometry ? " Alterne entre elas no mapa para observar as diferenças." : " Leia o aviso abaixo antes de alternar entre elas no mapa."}`}
         </p>
       </header>
-      <StaleNotice dataSource={stale} />
+      <StaleNotice
+        dataSource={stale}
+        onRetry={() => void Promise.all([first.refetch(), second.refetch()])}
+        isUpdating={first.isFetching || second.isFetching}
+      />
 
       {!notes.sameGeometry ? (
         <Caution>
-          <strong className="font-[650]">These passes were taken from different viewing geometries.</strong> The radar
-          looked at the ground from a different track, direction or frame ({describeGeometry(before)}, then{" "}
-          {describeGeometry(after)}), so brightness differences between them do not mean the ground changed.
+          <strong className="font-[650]">Estas passagens foram captadas com geometrias de observação diferentes.</strong> O radar
+          observou o solo de uma trilha, direção ou faixa distinta ({describeGeometry(before)}, depois{" "}
+          {describeGeometry(after)}); diferenças de brilho não significam que o terreno mudou.
         </Caution>
       ) : null}
-      {notes.samePass ? <Caution>Both ids in the address are the same pass, so the two images are identical.</Caution> : null}
+      {notes.samePass ? <Caution>Os dois identificadores do endereço apontam para a mesma passagem, então as imagens são idênticas.</Caution> : null}
       {swapped ? (
         <p className="text-[13px] leading-snug text-ink-3">
-          The address listed the later pass as "before". They are shown in date order.
+          O endereço indicava a passagem mais recente como anterior. A exibição segue a ordem das datas.
         </p>
       ) : null}
 
       <section className="flex flex-col gap-2" aria-labelledby="details-title">
-        <SectionTitle id="details-title">The two passes</SectionTitle>
+        <SectionTitle id="details-title">As duas passagens</SectionTitle>
         <PassTable before={before} after={after} />
         {notes.sameGeometry ? (
           <p className="text-[13px] leading-snug text-ink-3">
-            Same track, direction and frame, so the radar saw the ground from the same angle both times.
+            Mesma trilha, direção e faixa: o radar observou o solo pelo mesmo ângulo nas duas datas.
           </p>
         ) : null}
       </section>
 
       <section className="flex flex-col gap-2" aria-labelledby="read-title">
-        <SectionTitle id="read-title">Reading the images</SectionTitle>
+        <SectionTitle id="read-title">Como interpretar as imagens</SectionTitle>
         <ul className="flex list-disc flex-col gap-1.5 pl-4 text-[14px] leading-[1.55] text-ink-2 marker:text-ink-3">
-          <li>Still water reflects the radar pulse away from the satellite, so it looks dark.</li>
-          <li>These are preview images: visual renderings, not calibrated measurements.</li>
+          <li>A água parada reflete o pulso do radar para longe do satélite e aparece escura.</li>
+          <li>Estas são imagens de prévia: representações visuais, não medições calibradas.</li>
         </ul>
       </section>
 
@@ -153,26 +157,26 @@ function Caution({ children }: { children: ReactNode }) {
 
 function PassTable({ before, after }: { before: Pass; after: Pass }) {
   const rows: [string, (p: Pass) => ReactNode][] = [
-    ["Date", (p) => formatDateLong(p.date)],
-    ["Time", (p) => formatTimeUtc(p.start)],
-    ["Direction", (p) => (p.direction === "ascending" ? "Ascending (heading north)" : "Descending (heading south)")],
-    ["Track", (p) => p.track],
-    ["Frame", (p) => p.frame],
-    ["Data version", (p) => `${p.maturity[0].toUpperCase()}${p.maturity.slice(1)}, ${p.productVersion}`],
-    ["Full data file", (p) => formatBytes(p.sizeBytes)],
+    ["Data", (p) => formatDateLong(p.date)],
+    ["Horário", (p) => formatTimeUtc(p.start)],
+    ["Direção", (p) => (p.direction === "ascending" ? "Ascendente (sentido norte)" : "Descendente (sentido sul)")],
+    ["Trilha", (p) => p.track],
+    ["Faixa", (p) => p.frame],
+    ["Versão dos dados", (p) => `${p.maturity[0].toUpperCase()}${p.maturity.slice(1)}, ${p.productVersion}`],
+    ["Arquivo completo", (p) => formatBytes(p.sizeBytes)],
   ];
   return (
     <table className="num w-full border-collapse text-left text-[13px]">
       <thead>
         <tr className="border-b border-rule text-ink-2">
           <th scope="col" className="py-1.5 pr-2 font-[500]">
-            <span className="sr-only">Detail</span>
+            <span className="sr-only">Detalhe</span>
           </th>
           <th scope="col" className="py-1.5 pr-2 font-[650] text-ink">
-            Before
+            Antes
           </th>
           <th scope="col" className="py-1.5 font-[650] text-ink">
-            After
+            Depois
           </th>
         </tr>
       </thead>

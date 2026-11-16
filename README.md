@@ -5,7 +5,17 @@ Projeto para o **NASA Space Apps Challenge 2026**, desafio
 um mapa interativo do Brasil para explorar as passagens do radar **NISAR** (NASA-ISRO) e
 comparar o antes e o depois de mudanças na superfície. A primeira história é a **cheia de julho de 2026 no Rio Grande do Sul**.
 
-O repositório é um monorepo com dois workspaces npm: a **API** em `server/` (Hono) e o **site** em `web/` (Vite + React + MapLibre). A interface do site é em inglês; veja [`web/README.md`](web/README.md) e [`web/DESIGN.md`](web/DESIGN.md).
+O repositório é um monorepo com dois workspaces npm: a **API** em `server/` (Hono) e o **site** em `web/` (Vite + React + MapLibre). A home e os principais controles são em português; alguns textos legados e narrativas da API permanecem em inglês; veja [`web/README.md`](web/README.md) e [`web/DESIGN.md`](web/DESIGN.md).
+
+## Entrada e exploração
+
+- `/`: home com identidade Space Apps, prévias reais e acesso direto à história do RS.
+- `/explore`: mapa Brasil/estados. URLs antigas `/?region=...&month=...` continuam abrindo o mapa com filtros.
+- `/alerts?region=<estado>`: alertas ativos e histórico recente do INMET, com filtro estadual.
+- `/region/:id?tab=radar`: calendário e composição de passagens de múltiplos dias.
+- `/story/rs-flood-jul-2026` e `/compare?before=...&after=...`: história e comparação preservadas.
+
+Plano deste incremento: [home e exploração](docs/plano-home-exploracao.md). Rastreabilidade: [inventário frontend](docs/frontend-inventario.md).
 
 ## Rodando
 
@@ -35,7 +45,7 @@ Scripts do servidor (`npm run <script> -w server`):
 
 Todas as rotas ficam sob `/api`. Datas são `YYYY-MM-DD` (UTC). Sem `start`/`end`, o período padrão são os últimos 30 dias.
 Respostas que vêm do catálogo trazem `dataSource` (e o header `X-Data-Source`) com valor `live`, `cache` ou `stale`.
-`stale` significa que a NASA falhou e o servidor devolveu o último dado salvo.
+`stale` significa que a fonte está antiga ou falhou e o servidor devolveu um snapshot que já estava salvo.
 
 | Rota | Para que serve |
 |---|---|
@@ -46,10 +56,15 @@ Respostas que vêm do catálogo trazem `dataSource` (e o header `X-Data-Source`)
 | `GET /regions/:id/passes?start&end` | Passagens NISAR que **tocam o polígono** da região + linha do tempo + resumo |
 | `GET /regions/:id/footprints?start&end` | As mesmas passagens como GeoJSON (contornos no mapa) |
 | `GET /regions/:id/pairs?start&end[&eventDate]` | Pares antes/depois com **mesma geometria** (mesmo `stackId`). Com `eventDate`: o último antes e o primeiro depois do evento |
+| `GET /regions/:id/alerts?include=active\|recent` | Alertas CAP do INMET filtrados por prefixo IBGE; `br` devolve o escopo nacional |
+| `GET /regions/:id/organizations?areas&near&limit&cursor` | OSCs do snapshot público do IPEA, filtradas por área e ordenadas por distância |
+| `GET /regions/:id/posts?start&end&limit&cursor` | Feed automático de dias com passagens, pares compatíveis e histórias |
 | `GET /coverage?start&end` | Cobertura por estado no Brasil inteiro (máx. 31 dias), para colorir o mapa |
 | `GET /passes/:id` | Uma passagem pelo id |
 | `GET /passes/:id/browse` | URL da imagem de prévia + **cantos georreferenciados** (formato da fonte `image` do MapLibre) |
 | `GET /stories` · `GET /stories/:id` | Histórias curadas. `rs-flood-jul-2026` devolve narrativa, fontes, passagens e pares destacados já georreferenciados |
+
+OpenAPI 3.1 dos três feeds complementares: [`server/openapi.json`](server/openapi.json).
 
 Limites de período: país 31 dias, macrorregião 92 dias, estado 366 dias. O motivo é o tamanho: cada registro do catálogo tem cerca de 29 KB e o Brasil tem cerca de 1.500 passagens por mês.
 
@@ -75,6 +90,9 @@ ASF (PNG de prévia) ─> georreferenciamento (cache permanente) ┘
 - **Catálogo:** a busca de metadados no [NASA CMR](https://cmr.earthdata.nasa.gov/search) é aberta. O período é dividido em blocos semanais fixos, buscados em paralelo e guardados em `server/.cache/` já normalizados (pequenos). Semanas passadas ficam 7 dias no cache, a semana atual 3 horas.
 - **Deduplicação:** a mesma aquisição pode aparecer como beta, provisional e validated. Fica uma por `stackId` + ciclo, preferindo validated, frame completo e dupla polarização.
 - **Pares:** só são comparadas passagens com o mesmo `stackId` (trilha + direção + frame). Mudar a geometria de visada muda o brilho mesmo sem mudança no chão.
+- **Alertas:** o adaptador lê CAP 1.2 do bucket público WIS2 do INMET, mantém cache em disco e marca dados como `stale` se a publicação mais recente tiver mais de 24 horas. A lista estadual usa os dois primeiros dígitos do código IBGE do município; a resposta nacional usa `/regions/br/alerts`.
+- **Posts:** gerados do catálogo por dia de aquisição, pares consecutivos do mesmo `stackId` e histórias da aplicação; cursor é offset determinístico na consulta e a janela estadual respeita o limite de 366 dias.
+- **IPEA:** o endpoint Organizations baixa o CSV geral (cerca de 344 MB) em streaming na primeira consulta, conserva só OSCs ativas com coordenadas nas áreas de saúde ou assistência social e guarda o resultado compacto em `CACHE_DIR`. O snapshot observado (agosto de 2026) é servido com `stale` após 45 dias. Configure `IPEA_CSV_URL`, `IPEA_TIMEOUT_MS` e um `CACHE_DIR` persistente; a primeira consulta sem cache pode levar alguns minutos. Habitação e comunidades/favelas não são colunas separadas no snapshot atual, e campanhas do GlobalGiving não estão configuradas.
 
 ### Georreferenciamento das imagens de prévia (descoberta importante)
 
@@ -92,13 +110,15 @@ Em 24 cenas reais do RS o erro ficou entre 1,5 e 4,6 px, com proporção de pixe
 
 - **NISAR GCOV** — NASA/JPL e ISRO, via [NASA CMR](https://cmr.earthdata.nasa.gov/search) e [ASF DAAC](https://asf.alaska.edu/). Imagens de prévia abertas; arquivos HDF5 completos (5–7 GB) exigem [Earthdata Login](https://urs.earthdata.nasa.gov/) gratuito.
 - **Limites territoriais** — [IBGE, API de malhas](https://servicodados.ibge.gov.br/api/docs/malhas?versao=3).
+- **Alertas meteorológicos** — CAP do [INMET](https://avisos.inmet.gov.br/) publicado via nó [WIS2](https://wis2bra.inmet.gov.br/oapi/openapi).
+- **Organizações** — snapshot CSV do [Mapa das OSCs/IPEA](https://mapaosc.ipea.gov.br/base-dados), com áreas 2 (saúde) e 5 (assistência social) no arquivo verificado.
 - **Contexto do evento** — notícias listadas em `server/src/application/stories/definitions.ts`. Confirme com a Defesa Civil do RS.
 
 ## Limitações conhecidas
 
 - As imagens de prévia são renderizações visuais, não retroespalhamento calibrado. Números quantitativos (ex.: km² alagados) exigiriam os arquivos HDF5.
 - Em agosto de 2026 há um intervalo sem aquisições sobre o RS (27/07 → 16/08).
-- O cache fica em disco local; num deploy novo ele começa vazio (use `npm run warm`).
+- O cache fica em disco local; num deploy novo ele começa vazio (use `npm run warm`). Antes de publicar a rota de organizações, execute `npm run warm:ipea -w server` com `CACHE_DIR` persistente; o primeiro download e parsing do CSV geral (cerca de 344 MB) pode levar vários minutos. `IPEA_TIMEOUT_MS` controla o limite (padrão 10 min). O snapshot observado é de agosto de 2026 e será identificado como `stale` depois de 45 dias.
 
 ## Arquitetura
 
@@ -164,4 +184,4 @@ web/
 
 ## Estado atual e evolução aprovada
 
-A evolução aprovada do frontend prevê navegação por estados e abas Overview, Radar, Alerts, Posts e Help. Os endpoints novos ainda não estão implementados. Comparações visuais não constituem detecção automática de desastre. Consulte [a documentação de frontend](docs/frontend.md).
+A navegação por estados e as abas Overview, Radar, Alerts, Posts e Help estão implementadas. Alertas usam CAP do INMET, Posts são gerados a partir do radar e Help consulta o snapshot público do Mapa das OSCs; veja limites de áreas e atualização em [rotas](docs/rotas.md). Comparações visuais não constituem detecção automática de desastre. Consulte [a documentação de frontend](docs/frontend.md).

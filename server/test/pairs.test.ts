@@ -57,6 +57,15 @@ describe('bracketingPairs (flood started 2026-07-22)', () => {
   it('respects the before/after limits', () => {
     expect(bracketingPairs(passes, '2026-07-22', { maxDaysAfter: 2 })).toHaveLength(1);
   });
+
+  it('returns no pair when no stack brackets the event and breaks equal-rank ties by stack id', () => {
+    expect(bracketingPairs([d103('2026-07-10', 25)], '2026-07-22')).toEqual([]);
+    const beta = makePass({ date: '2026-07-10', cycle: 25, stackId: 'beta', track: 2, frame: 1 });
+    const alpha = makePass({ date: '2026-07-10', cycle: 25, stackId: 'alpha', track: 1, frame: 1 });
+    const betaAfter = makePass({ date: '2026-07-23', cycle: 26, stackId: 'beta', track: 2, frame: 1 });
+    const alphaAfter = makePass({ date: '2026-07-23', cycle: 26, stackId: 'alpha', track: 1, frame: 1 });
+    expect(bracketingPairs([betaAfter, beta, alphaAfter, alpha], '2026-07-22').map((p) => p.stackId)).toEqual(['alpha', 'beta']);
+  });
 });
 
 describe('coverage', () => {
@@ -70,5 +79,10 @@ describe('coverage', () => {
       firstDate: '2026-06-29',
       lastDate: '2026-07-27',
     });
+  });
+
+  it('reports insufficient median-gap data when there are fewer than two dates', () => {
+    expect(summarize([]).medianGapDays).toBeNull();
+    expect(summarize([d103('2026-07-11', 25)]).medianGapDays).toBeNull();
   });
 });

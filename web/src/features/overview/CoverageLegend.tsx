@@ -9,12 +9,12 @@ export function CoverageLegend({ month, dimmed }: { month: string; dimmed: boole
   return (
     <figure className="pointer-events-auto rounded-[4px] bg-sheet/95 px-3 pb-2.5 pt-2 shadow-[0_0_0_1px_var(--color-rule)]">
       <figcaption className="mb-1.5 text-[12px] font-[600] leading-tight text-ink">
-        Days with a pass <span className="font-normal text-ink-2">in {formatMonth(month)}</span>
+        Dias com passagem <span className="font-normal text-ink-2">em {formatMonth(month)}</span>
       </figcaption>
       <ol className={`flex items-start gap-[2px] transition-opacity ${dimmed ? "opacity-40" : ""}`}>
         <li className="flex w-[38px] flex-col gap-1">
           <span aria-hidden className="h-3 rounded-[2px] border border-dashed border-ink-3" />
-          <span className="text-[11px] leading-none text-ink-2" aria-label="no days with a pass">
+          <span className="text-[11px] leading-none text-ink-2" aria-label="nenhum dia com passagem">
             {NO_COVERAGE_LABEL}
           </span>
         </li>

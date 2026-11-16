@@ -10,7 +10,8 @@
     "test": "vitest run",
     "boundaries": "tsx scripts/fetch-boundaries.ts",
     "check:browse": "tsx scripts/check-browse-bounds.ts",
-    "warm": "tsx scripts/warm-cache.ts"
+    "warm": "tsx scripts/warm-cache.ts",
+    "warm:ipea": "tsx scripts/warm-ipea-cache.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.8",
@@ -19,6 +20,7 @@
     "@turf/boolean-intersects": "^7.4.0",
     "@turf/boolean-point-in-polygon": "^7.4.0",
     "@turf/helpers": "^7.4.0",
+    "fast-xml-parser": "^5.12.1",
     "hono": "^4.13.18",
     "pngjs": "^7.0.0",
     "zod": "^4.6.7"

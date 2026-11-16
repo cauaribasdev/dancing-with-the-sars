@@ -33,7 +33,7 @@ export function StoryPage() {
       <div className="mx-auto max-w-xl px-5 py-16">
         <ErrorMessage onRetry={() => story.refetch()}>{describeError(story.error)}</ErrorMessage>
         <Link to={paths.overview()} className="link mt-4 inline-block">
-          Back to the map
+          Voltar ao mapa
         </Link>
       </div>
     );
@@ -41,8 +41,8 @@ export function StoryPage() {
   if (!story.data) {
     return (
       <div className="mx-auto max-w-xl px-5 py-16">
-        <ProgressBar label="Loading the story" />
-        <p className="mt-3 text-ink-2">Loading the story and its radar passes. The first time, this can take a few seconds.</p>
+        <ProgressBar label="Carregando a história" />
+        <p className="mt-3 text-ink-2">Carregando a história e as passagens do radar. Na primeira vez, pode levar alguns segundos.</p>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export function StoryPage() {
 
   return (
     <MapPageLayout
-      panelLabel="Story"
+      panelLabel="História"
       map={map}
       panel={
         <StoryPanel
@@ -87,6 +87,8 @@ export function StoryPage() {
           onChoosePair={(p) => setChosenPair(pairKey(p))}
           selectedPlace={target?.place.name}
           onChoosePlace={choosePlace}
+          onRetry={() => void story.refetch()}
+          isUpdating={story.isFetching}
         />
       }
     />
@@ -100,6 +102,8 @@ function StoryPanel({
   onChoosePair,
   selectedPlace,
   onChoosePlace,
+  onRetry,
+  isUpdating,
 }: {
   story: Story;
   featured: StoryPair[];
@@ -107,6 +111,8 @@ function StoryPanel({
   onChoosePair: (p: StoryPair) => void;
   selectedPlace: string | undefined;
   onChoosePlace: (p: StoryPlace) => void;
+  onRetry: () => void;
+  isUpdating: boolean;
 }) {
   const others = otherPairs(s);
   return (
@@ -114,22 +120,23 @@ function StoryPanel({
       <header className="flex flex-col gap-3">
         <PageTitle>{s.title}</PageTitle>
         <p className="text-[15px] leading-[1.55] text-ink-2">{s.subtitle}</p>
-        <p className="text-[13px] text-ink-3">Event on {formatDateLong(s.eventDate)}</p>
+        <p className="text-[12px] text-ink-3">Narrativa e títulos das fontes em inglês, no idioma original.</p>
+        <p className="text-[13px] text-ink-3">Evento em {formatDateLong(s.eventDate)}</p>
       </header>
-      <StaleNotice dataSource={s.dataSource} />
+      <StaleNotice dataSource={s.dataSource} onRetry={onRetry} isUpdating={isUpdating} />
 
       <p className="text-[15px] leading-[1.55] text-ink">{s.narrative.summary}</p>
 
       <section className="flex flex-col gap-3" aria-labelledby="pairs-title">
-        <SectionTitle id="pairs-title">Before and after</SectionTitle>
+        <SectionTitle id="pairs-title">Antes e depois</SectionTitle>
         {pair ? (
           <>
             <p className="text-[14px] leading-[1.55] text-ink-2">
-              Each pair is two radar images of the same strip, taken from the same position in orbit. Flip
-              between them on the map to see what changed.
+              Cada par reúne duas imagens de radar da mesma faixa, captadas da mesma posição orbital. Alterne
+              entre elas no mapa para observar as diferenças.
             </p>
             {featured.length > 1 ? (
-              <ul className="flex flex-col gap-1.5" aria-label="Pairs of images">
+              <ul className="flex flex-col gap-1.5" aria-label="Pares de imagens">
                 {featured.map((p) => (
                   <li key={pairKey(p)}>
                     <PairOption pair={p} selected={p === pair} onChoose={() => onChoosePair(p)} />
@@ -140,19 +147,19 @@ function StoryPanel({
               <PairSummary pair={pair} />
             )}
             <Link to={paths.compare(pair.before.id, pair.after.id)} className="link self-start text-[14px]">
-              Details of these two passes
+              Detalhes destas duas passagens
             </Link>
           </>
         ) : (
-          <p className="text-[14px] text-ink-2">This story has no before and after pair yet.</p>
+          <p className="text-[14px] text-ink-2">Esta história ainda não tem um par de imagens antes e depois.</p>
         )}
       </section>
 
-      <TextList title="What to look for" id="look-title" items={s.narrative.whatToLookFor} />
+      <TextList title="O que observar" id="look-title" items={s.narrative.whatToLookFor} />
 
       {s.places.length > 0 ? (
         <section className="flex flex-col gap-2" aria-labelledby="places-title">
-          <SectionTitle id="places-title">Places</SectionTitle>
+          <SectionTitle id="places-title">Locais</SectionTitle>
           <ul className="flex flex-col">
             {s.places.map((p) => (
               <li key={p.name}>
@@ -166,7 +173,7 @@ function StoryPanel({
                 >
                   <span aria-hidden className="size-2.5 shrink-0 rounded-full border-[1.5px] border-ink bg-signal" />
                   <span className="place text-[16px] text-ink">{p.name}</span>
-                  <span className="ml-auto text-[12px] text-ink-3">Go there</span>
+                  <span className="ml-auto text-[12px] text-ink-3">Ir até lá</span>
                 </button>
               </li>
             ))}
@@ -174,12 +181,12 @@ function StoryPanel({
         </section>
       ) : null}
 
-      <TextList title="Why it happened" id="why-title" items={s.narrative.physicalDrivers} />
-      <TextList title="Keep in mind" id="caveats-title" items={s.narrative.caveats} />
+      <TextList title="Por que aconteceu" id="why-title" items={s.narrative.physicalDrivers} />
+      <TextList title="Importante saber" id="caveats-title" items={s.narrative.caveats} />
 
       {s.sources.length > 0 ? (
         <section className="flex flex-col gap-2" aria-labelledby="sources-title">
-          <SectionTitle id="sources-title">Sources</SectionTitle>
+          <SectionTitle id="sources-title">Fontes</SectionTitle>
           <ul className="flex flex-col gap-2.5 text-[14px] leading-snug">
             {s.sources.map((src) => (
               <li key={src.url}>
@@ -195,10 +202,10 @@ function StoryPanel({
 
       {others.length > 0 ? (
         <section className="flex flex-col gap-2 border-t border-ink pt-4" aria-labelledby="others-title">
-          <SectionTitle id="others-title">More pairs around the event</SectionTitle>
+          <SectionTitle id="others-title">Outros pares do evento</SectionTitle>
           <p className="text-[13px] leading-snug text-ink-2">
-            Other strips that touch {regionNameInSentence(s.region)}, with a pass before and after {formatDateLong(s.eventDate)}. Each opens on its
-            own page.
+            Outras faixas sobre {regionNameInSentence(s.region)}, com uma passagem antes e outra depois de {formatDateLong(s.eventDate)}. Cada par abre em
+            sua própria página.
           </p>
           <ul className="flex flex-col divide-y divide-rule border-y border-rule">
             {others.map((p) => (
@@ -251,17 +258,17 @@ function PairText({ pair }: { pair: StoryPair }) {
       <span className="text-[13px] leading-snug text-ink-2">{pairTiming(pair)}</span>
       {pair.placesCovered.length > 0 ? (
         <span className="text-[13px] leading-snug text-ink-2">
-          Shows{" "}
+          Mostra{" "}
           {pair.placesCovered.map((name, i) => (
             <span key={name}>
-              {i > 0 ? (i === pair.placesCovered.length - 1 ? " and " : ", ") : null}
+              {i > 0 ? (i === pair.placesCovered.length - 1 ? " e " : ", ") : null}
               <span className="place text-ink">{name}</span>
             </span>
           ))}
         </span>
       ) : null}
       <span className="num text-[12px] text-ink-3">
-        {describeGeometry(pair)}, {plural(pair.daysApart, "day", "days")} apart
+        {describeGeometry(pair)}, com intervalo de {plural(pair.daysApart, "dia", "dias")}
       </span>
     </>
   );
@@ -296,7 +303,7 @@ function PlaceMarker({
       <button
         type="button"
         onClick={() => onChoose(place)}
-        aria-label={`Go to ${place.name}`}
+        aria-label={`Ir para ${place.name}`}
         className="flex items-center gap-1.5 rounded-[3px] focus-visible:outline-offset-2"
       >
         <span

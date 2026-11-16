@@ -1,10 +1,11 @@
 import type { ExpressionSpecification, FilterSpecification } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Layer, Source, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import type { BBox, FootprintsGeoJSON, IsoDate, Pass, Region, RegionFeature } from "../../api/types";
 import { BaseMap } from "../../map/BaseMap";
 import { BRAZIL_BBOX, bboxToBounds } from "../../map/basemapConfig";
 import { BrowseImageLayer, type BrowseImageState } from "../../map/BrowseImageLayer";
+import { DailyImageLayer } from "../../map/DailyImageLayer";
 import { BrowseImageStatus } from "../../map/BrowseImageStatus";
 import { useLabelLayerId } from "../../map/layers";
 import { ANNOTATION_LINE, MAP_COLORS } from "../../map/mapColors";
@@ -36,6 +37,8 @@ interface Props {
   pending: boolean;
   loading: boolean;
   image: BrowseImageState;
+  dailyPassIds?: string[];
+  dailyOpacity?: number;
   onSelectPass: (pass: Pass) => void;
   /** Frames this bbox when `n` changes (selection from the list). Camera only: never used to place an image. */
   focus: { bbox: BBox; n: number } | null;
@@ -135,10 +138,16 @@ export function RegionMap({
   pending,
   loading,
   image,
+  dailyPassIds = [],
+  dailyOpacity = 0.65,
   onSelectPass,
   focus,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
+  const [imageStatuses,setImageStatuses]=useState<Record<string,string>>({});
+  const onImageStatus=useCallback((id:string,status:string)=>setImageStatuses(prev=>prev[id]===status?prev:{...prev,[id]:status}),[]);
+  const readyCount=dailyPassIds.filter(id=>imageStatuses[id]==='ready').length;
+  const excludedCount=dailyPassIds.filter(id=>['error','unavailable'].includes(imageStatuses[id])).length;
   const [chooser, setChooser] = useState<Chooser | null>(null);
   const [hovering, setHovering] = useState(false);
 
@@ -176,11 +185,11 @@ export function RegionMap({
     <>
       {loading ? (
         <div className="absolute inset-x-0 top-0">
-          <ProgressBar label="Loading pass outlines" />
+          <ProgressBar label="Carregando contornos das passagens" />
         </div>
       ) : null}
       <div className="absolute left-3 top-3">
-        <BrowseImageStatus image={image} />
+        {dailyPassIds.length ? <div className="daily-map-status" role="status">{readyCount}/{dailyPassIds.length} imagens prontas{excludedCount>0 && <span> · {excludedCount} indisponíveis (falha ou georreferência inadequada)</span>}</div> : <BrowseImageStatus image={image} />}
       </div>
       <div className="absolute bottom-9 left-3 flex max-w-[260px] flex-col gap-1.5 rounded-[4px] bg-sheet/95 px-3 py-2 text-[12px] leading-snug text-ink shadow-[0_0_0_1px_var(--color-rule)] sm:left-4">
         <span className="flex items-center gap-2">
@@ -188,16 +197,16 @@ export function RegionMap({
             <rect x="1.5" y="1.5" width="21" height="9" rx="1" fill="none" stroke={MAP_COLORS.ink} strokeWidth="3.5" />
             <rect x="1.5" y="1.5" width="21" height="9" rx="1" fill="none" stroke={MAP_COLORS.signal} strokeWidth="1.5" />
           </svg>
-          Area seen by one pass
+          Área observada por uma passagem
         </span>
         <span className="text-ink-2">
-          {selectedPassId ? "The thick outline is the chosen pass." : "Click an outline to see its radar image."}
+          {selectedPassId ? "O contorno espesso marca a passagem selecionada." : "Clique em um contorno para ver a imagem de radar."}
         </span>
       </div>
       {chooser ? (
         <div
           role="dialog"
-          aria-label="Choose a pass"
+          aria-label="Escolher uma passagem"
           className="pointer-events-auto absolute z-10 flex max-h-[min(320px,70%)] w-[260px] flex-col rounded-[4px] bg-sheet text-[13px] shadow-[0_0_0_1px_var(--color-rule),0_6px_16px_-8px_rgb(22_32_42/0.35)]"
           style={{
             left: chooser.x + 10,
@@ -206,9 +215,9 @@ export function RegionMap({
           }}
         >
           <div className="flex items-baseline justify-between gap-2 border-b border-rule px-3 py-2">
-            <p className="font-[650]">{chooser.passes.length} passes overlap here</p>
+            <p className="font-[650]">{chooser.passes.length} passagens se sobrepõem aqui</p>
             <button type="button" onClick={() => setChooser(null)} className="link text-[12px]">
-              Close
+              Fechar
             </button>
           </div>
           <ul className="overflow-y-auto">
@@ -237,10 +246,19 @@ export function RegionMap({
   return (
     <BaseMap
       key={region?.id ?? "none"}
+      territory={outline ? [outline.geometry] : []}
       ref={mapRef}
       initialBbox={bbox}
       initialPadding={region?.kind === "state" ? 48 : 24}
       interactiveLayerIds={footprints ? [FILL_LAYER] : []}
+      onIdle={() => {
+        // Image downloads finish out of order. Reconcile actual WebGL stacking once idle.
+        const map = mapRef.current?.getMap();
+        if (!map || !map.getLayer(SELECTED_CASING_LAYER)) return;
+        const desired = dailyPassIds.map(id=>`daily-${id}-layer`).filter(id=>map.getLayer(id));
+        const actual = map.getStyle().layers.map(layer=>layer.id).filter(id=>desired.includes(id));
+        if (actual.join('|') !== desired.join('|')) desired.forEach(id=>map.moveLayer(id, SELECTED_CASING_LAYER));
+      }}
       onClick={onClick}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
@@ -248,10 +266,10 @@ export function RegionMap({
       overlay={overlay}
     >
       {outline ? <RegionOutline feature={outline} /> : null}
-      {footprints ? (
+      {footprints && outline && !pending ? (
         <>
           <FootprintLayers data={footprints} selectedDay={selectedDay} selectedPassId={selectedPassId} pending={pending} />
-          <BrowseImageLayer image={image} beforeId={SELECTED_CASING_LAYER} />
+          {dailyPassIds.length ? dailyPassIds.map(id=><DailyImageLayer key={id} passId={id} opacity={dailyOpacity} beforeId={SELECTED_CASING_LAYER} onStatus={onImageStatus}/>) : <BrowseImageLayer image={image} beforeId={SELECTED_CASING_LAYER} />}
         </>
       ) : null}
     </BaseMap>
