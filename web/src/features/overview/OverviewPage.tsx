@@ -24,7 +24,7 @@ export function OverviewPage() {
   const period = useMemo(() => monthRange(month, today), [month, today]);
   const selectedId = params.get("region") ?? "br";
 
-  const regions = useRegions();
+  const regions = useRegions("state");
   const geo = useRegionsGeoJSON("state");
   const coverage = useCoverage(period);
   const stories = useStories();
